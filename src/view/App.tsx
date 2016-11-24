@@ -3,6 +3,7 @@ import { connect } from 'react-redux';
 
 import { Actions } from '../actions'
 import { WorkerActions } from '../worker-actions'
+import { WorkerCommands } from '../analysis/worker-commands'
 
 import FileInput from './file-input'
 import Threads from './threads-list'
@@ -20,7 +21,7 @@ const RenderApp = function({ dispatch }) {
             let worker = new Analyzer();
             worker.addEventListener('message', onWorkerMessage);
             console.log("Sending to worker");
-            worker.postMessage(result);
+            worker.postMessage(WorkerCommands.parseRawData(result));
         } else {
             console.warn('Web workers not supported');
         }
