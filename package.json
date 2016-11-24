@@ -23,6 +23,7 @@
     "d3-time-format": "^2.0.2",
     "parse5": "^2.2.3",
     "react-hot-loader": "^3.0.0-beta.2",
+    "react-redux": "^4.4.6",
     "redux-devtools": "^3.3.1",
     "ts-loader": "^1.2.0",
     "typescript": "^2.2.0-dev.20161113",
@@ -32,10 +33,11 @@
     "webpack-notifier": "^1.4.1"
   },
   "dependencies": {
+    "@types/react-redux": "^4.4.33",
     "parse5": "git+https://github.com/inikulin/parse5.git",
     "react": "^15.3.2",
     "react-dom": "^15.3.2",
-    "react-redux": "^4.4.5",
+    "react-redux": "^4.4.6",
     "redux": "^3.6.0",
     "worker-loader": "^0.7.1"
   }

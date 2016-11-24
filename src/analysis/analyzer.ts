@@ -2,8 +2,15 @@ import * as parse5 from 'parse5';
 import * as _ from 'underscore';
 import * as d3 from 'd3-time-format';
 
+import { ThreadInfo } from '../state'
+import { WorkerActions } from '../worker-actions'
+
 type TextNode = parse5.AST.Default.TextNode
 type ASTElement = parse5.AST.Default.Element;
+
+function sendUpdate(message: WorkerActions.t) {
+    (postMessage as any)(message);
+}
 
 class DomNode {
     ast: ASTElement;
@@ -73,24 +80,17 @@ class DomNode {
 }
 
 class Message {
-    author: string;
-    time: Date;
-    text: string;
-
-    constructor(author: string, time: Date, text: string) {
-        this.author = author;
-        this.time = time;
-        this.text = text;
+    constructor(private author: string, 
+                private time: Date, 
+                private text: string) {
     }
 }
 
 class MessageThread {
-    parties: string[];
-    messages: Message[]
-
-    constructor(parties: string[], messages: Message[]) {
-        this.parties = parties;
-        this.messages = messages;
+    // The id is our internal identifier for a message thread.
+    constructor(private id: number,
+                private parties: string[], 
+                private messages: Message[]) {
     }
 }
 
@@ -108,9 +108,9 @@ function readMessage(info: DomNode, text: string): Message {
     return new Message(author, time, text);
 }
 
-function readMessageThread(node: DomNode): MessageThread {
+function readMessageThread(node: DomNode, id: number): MessageThread {
     // TODO: Edge case: What if people have a comma in their names?
-    let people = node.text().split(",");
+    let people = node.text().split(",").map(name => name.trim());
     let messageInfos =
         node.getAllByClass("message")
             .map(node => node.getFirstByClass("message_header"));
@@ -122,19 +122,18 @@ function readMessageThread(node: DomNode): MessageThread {
 
     let messages = _.zip(messageInfos, messageTexts)
                     .map(pair => readMessage(pair[0], pair[1]));
-    return new MessageThread(people, messages);
+    return new MessageThread(id, people, messages);
 }
 
 function parseRaw(raw: string) {
     let start = new Date().getTime();
     let document = parse5.parse(raw) as parse5.AST.Default.Document;
     let end = new Date().getTime();
-    console.log("Parsing took: " + (end - start) + " ms");
+    sendUpdate(WorkerActions.progressParsed(end - start));
     return new DomNode(document.childNodes[0] as ASTElement);
 }
 
 onmessage = function (message) {
-    console.log('>>> In worker <<<');
     let dom = parseRaw(String(message.data));
     let contents = dom.body().getFirstByClass("contents");
     let name = contents.h1().text();
@@ -143,8 +142,10 @@ onmessage = function (message) {
     // into unlabelled <div>s, but it happens.
     let threads_groups = contents.getAllByTag("div")
                                  .map(group => group.getAllByClass("thread"));
-    let threads = [].concat.apply([], threads_groups);
-    threads.map(readMessageThread);
+    let threads = [].concat.apply([], threads_groups).map(readMessageThread);
+    let thread_infos = threads.map(thread => 
+        new ThreadInfo(thread.id, thread.parties, thread.messages.length)
+    );
 
-    (postMessage as any)({ key: "name", value: name });
+    sendUpdate(WorkerActions.threads(thread_infos));
 }
