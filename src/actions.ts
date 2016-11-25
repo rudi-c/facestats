@@ -28,6 +28,10 @@ function reduceWorker(state : State, action: WorkerActions.t): State {
             return Object.assign({}, state, {
                 timeToParseInMs: action.timeInMs
             });
+        case "got_message_count_by_day":
+            return Object.assign({}, state, {
+                msgCountByDate: action.value
+            });
         default: const _exhaustiveCheck: never = action;
     }
 }

@@ -8,10 +8,12 @@ export class ThreadInfo {
 export class State {
     threads: ThreadInfo[]
     timeToParseInMs: number
+    msgCountByDate: [Date, number][]
 
     constructor() {
         this.threads = [];
         this.timeToParseInMs = null;
+        this.msgCountByDate = null;
     }
 }
 

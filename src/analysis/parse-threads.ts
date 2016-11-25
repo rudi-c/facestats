@@ -8,6 +8,13 @@ import { sendUpdate } from './helpers'
 type TextNode = parse5.AST.Default.TextNode
 type ASTElement = parse5.AST.Default.Element;
 
+export class Message {
+    constructor(public author: string,
+                public time: Date,
+                public text: string) {
+    }
+}
+
 export class MessageThread {
     // The id is our internal identifier for a message thread.
     constructor(public id: number,
@@ -80,13 +87,6 @@ class DomNode {
 
     div(): DomNode {
         return this.getFirstByTag("div");
-    }
-}
-
-class Message {
-    constructor(private author: string, 
-                private time: Date, 
-                private text: string) {
     }
 }
 

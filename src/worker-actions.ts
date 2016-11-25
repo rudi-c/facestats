@@ -25,7 +25,19 @@ export module WorkerActions {
         }
     }
 
+    export interface GotMessageCountByDay {
+        type: "got_message_count_by_day";
+        value: [Date, number][];
+    }
+
+    export function gotMessageCountByDay(value: [Date, number][]): GotMessageCountByDay {
+        return {
+            type: "got_message_count_by_day",
+            value: value
+        }
+    }
+
 
     // Jane Street OCaml convention...
-    export type t = ProgressParsed | Threads 
+    export type t = ProgressParsed | Threads | GotMessageCountByDay
 }
