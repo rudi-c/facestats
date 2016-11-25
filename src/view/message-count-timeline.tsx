@@ -65,7 +65,6 @@ const RenderMessageCountTimeline = function({ msgCountByDate }: MessageCountTime
 }
 
 const mapStateToProps = function(state : State): MessageCountTimelineProps {
-    console.log(state);
     return {
         msgCountByDate: state.msgCountByDate,
     }

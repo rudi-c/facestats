@@ -9,7 +9,7 @@ interface ThreadsProps {
 
 const RenderThreads = function({ threads }: ThreadsProps): JSX.Element {
     const threadsList = threads.map((thread, i) => 
-        <li key={i}>{ thread.parties.join(", ") }</li>
+        <li key={i}>{ thread.parties.join(", ") + " (" + thread.length + ")"}</li>
     );
     return (
         <ul>

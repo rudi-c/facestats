@@ -20,6 +20,8 @@ export class MessageThread {
     constructor(public id: number,
                 public parties: string[], 
                 public messages: Message[]) {
+        parties = parties.sort();
+        messages = _.sortBy(messages, message => message.time.getTime());
     }
 }
 

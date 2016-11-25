@@ -64,6 +64,21 @@ function getMsgCountByDay(): [Date, number][] {
     return countForAllDates;
 }
 
+// Group conversations are not unique (e.g. John, Adam, Sam could appear multiple times).
+// Individual conversations are not unique. There's a limit of 10,000 per thread (in the HTML data),
+// and I'm not sure if it could be broken in pieces for other reasons.
+//
+// There's no reliable way to tell apart two friends with the same name.
+function dedupThreads(threads: MessageThread[]): MessageThread[] {
+    return _.values(_.groupBy(threads, thread => thread.parties.join("|")))
+        .map(threadGroup =>
+            new MessageThread(
+                threadGroup[0].id,
+                threadGroup[0].parties,
+                _.flatten(threadGroup.map(thread => thread.messages)))
+        );
+}
+
 onmessage = function(message: MessageEvent) {
     const command: WorkerCommands.t = message.data;
 
@@ -73,14 +88,16 @@ onmessage = function(message: MessageEvent) {
 
     switch (command.type) {
         case "parse_raw_data": 
-            threads = parseThreads(command.rawData);
-            const thread_infos = threads.map(thread => 
+            threads = dedupThreads(parseThreads(command.rawData));
+            const threadInfos = threads.map(thread =>
                 new ThreadInfo(thread.id, thread.parties, thread.messages.length)
             );
 
+            const sortedThreadInfos = _.sortBy(threadInfos, info => -info.length);
+
             // TODO: Handle case of 0 threads or 0 messages.
 
-            sendUpdate(WorkerActions.threads(thread_infos));
+            sendUpdate(WorkerActions.threads(sortedThreadInfos));
             break;
         case "get_misc_info": 
             break;
