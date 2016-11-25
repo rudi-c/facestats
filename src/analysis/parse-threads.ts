@@ -90,12 +90,15 @@ class Message {
     }
 }
 
-let _parseTimePlain = d3.timeParse("%A, %B %d, %Y at %I:%M%p");
-let _parseTimePST = d3.timeParse("%A, %B %d, %Y at %I:%M%p PST");
-let _parseTimePDT = d3.timeParse("%A, %B %d, %Y at %I:%M%p PDT");
+let _parseTime = d3.timeParse("%A, %B %d, %Y at %I:%M%p %Z");
 function parseTime(raw: string): Date {
-    // TODO: Think about the PST/PDT parsing issue.
-    return _parseTimePlain(raw);
+    // The %Z format specified of d3-time-format doesn't understand PST and PDT.
+    const time = _parseTime(raw.replace("PDT", "-07").replace("PST", "-08"));
+    if (!time) {
+        // TODO: Maybe not print an error every time.
+        console.error("Could not parse: " + raw);
+    }
+    return time;
 }
 
 function readMessage(info: DomNode, text: string): Message {
