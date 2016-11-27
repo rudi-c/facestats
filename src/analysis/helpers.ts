@@ -1,5 +1,7 @@
 import { WorkerActions } from './worker-actions'
 
+export const fbEmailRegex = new RegExp("^([0-9]*)@facebook.com$");
+
 export function countMap<T>(values: T[]): Map<T, number> {
     const counts = new Map<T, number>();
     values.forEach(value => {

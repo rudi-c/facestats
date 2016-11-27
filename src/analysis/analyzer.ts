@@ -5,6 +5,7 @@ import { WorkerActions } from './worker-actions'
 import { WorkerCommands } from './worker-commands'
 
 import { countMap, sendUpdate } from './helpers'
+import { cleanup } from './cleanup'
 
 import { parseThreads, Message, MessageThread } from './parse-threads'
 
@@ -133,6 +134,7 @@ onmessage = function(message: MessageEvent) {
     switch (command.type) {
         case "parse_raw_data":
             const threadsList = dedupThreads(parseThreads(command.rawData));
+            cleanup(threadsList);
             const threadInfos = threadsList.map(thread =>
                 new Data.ThreadInfo(thread.id, thread.parties, thread.messages.length)
             );
