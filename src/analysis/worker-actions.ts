@@ -1,12 +1,12 @@
-import { ThreadInfo } from "./state"
+import * as Data from './data'
 
 export module WorkerActions {
     export interface Threads {
         type: "threads";
-        threads: ThreadInfo[];
+        threads: Data.ThreadInfo[];
     }
 
-    export function threads(threads: ThreadInfo[]): Threads {
+    export function threads(threads: Data.ThreadInfo[]): Threads {
         return {
             type: "threads",
             threads: threads
@@ -37,7 +37,21 @@ export module WorkerActions {
         }
     }
 
+    export interface GotThreadDetails {
+        type: "got_thread_details";
+        threadId: number;
+        details: Data.ThreadDetails;
+    }
+
+    export function gotThreadDetails(threadId: number, 
+                                     details: Data.ThreadDetails): GotThreadDetails {
+        return {
+            type: "got_thread_details",
+            threadId: threadId,
+            details: details,
+        }
+    }
 
     // Jane Street OCaml convention...
-    export type t = ProgressParsed | Threads | GotMessageCountByDay
+    export type t = ProgressParsed | Threads | GotMessageCountByDay | GotThreadDetails
 }

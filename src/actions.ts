@@ -1,21 +1,33 @@
 import { State, defaultState } from "./state"
-import { WorkerActions } from "./worker-actions"
+import { WorkerActions } from "./analysis/worker-actions"
 
 export module Actions {
+    export interface WorkerCreated {
+        type: "worker_created"
+        worker: any
+    }
+
+    export function workerCreated(worker: any): WorkerCreated {
+        return {
+            type: "worker_created",
+            worker: worker,
+        }
+    }
+
     export interface WorkerAction {
         type: "worker_action";
         action: WorkerActions.t
     }
 
-    export function workerAction(action): WorkerAction {
+    export function workerAction(action: WorkerActions.t): WorkerAction {
         return {
             type: "worker_action",
-            action: action
+            action: action,
         }
     }
 
     // Jane Street OCaml convention...
-    export type t = WorkerAction
+    export type t = WorkerCreated | WorkerAction
 }
 
 function reduceWorker(state : State, action: WorkerActions.t): State {
@@ -32,6 +44,12 @@ function reduceWorker(state : State, action: WorkerActions.t): State {
             return Object.assign({}, state, {
                 msgCountByDate: action.value
             });
+        case "got_thread_details":
+            return Object.assign({}, state, {
+                threadDetails: state.threadDetails.set(
+                    action.threadId, action.details
+                )
+            });
         default: const _exhaustiveCheck: never = action;
     }
 }
@@ -40,6 +58,10 @@ export function reduce(state : State = defaultState, action: Actions.t): State {
     switch (action.type) {
         case "worker_action":
             return reduceWorker(state, action.action);
+        case "worker_created":
+            return Object.assign({}, state, {
+                worker: action.worker
+            });
         // default: const _exhaustiveCheck: never = action;
         default: return state;
     }

@@ -2,7 +2,7 @@ import * as React from 'react';
 import { connect } from 'react-redux';
 
 import { Actions } from '../actions'
-import { WorkerActions } from '../worker-actions'
+import { WorkerActions } from '../analysis/worker-actions'
 import { WorkerCommands } from '../analysis/worker-commands'
 
 import FileInput from './file-input'
@@ -17,6 +17,7 @@ function onWorkerMessage(dispatch, worker) {
         
         const action = messageEvent.data as WorkerActions.t;
         switch (action.type) {
+            // When the parsing is done.
             case "threads": 
                 worker.postMessage(WorkerCommands.getMessageCountByDay());
                 break;
@@ -32,6 +33,7 @@ const RenderApp = function({ dispatch }) {
         if ((window as any).Worker) {
             let worker = new Analyzer();
             worker.addEventListener('message', onWorkerMessage(dispatch, worker));
+            dispatch(Actions.workerCreated(worker));
             console.log("Sending to worker");
             worker.postMessage(WorkerCommands.parseRawData(result));
         } else {

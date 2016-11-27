@@ -2,7 +2,7 @@ import * as parse5 from 'parse5';
 import * as d3 from 'd3-time-format';
 import * as _ from 'underscore';
 
-import { WorkerActions } from '../worker-actions'
+import { WorkerActions } from '../analysis/worker-actions'
 import { sendUpdate } from './helpers'
 
 type TextNode = parse5.AST.Default.TextNode
@@ -20,8 +20,8 @@ export class MessageThread {
     constructor(public id: number,
                 public parties: string[], 
                 public messages: Message[]) {
-        parties = parties.sort();
-        messages = _.sortBy(messages, message => message.time.getTime());
+        this.parties = parties.sort();
+        this.messages = _.sortBy(messages, message => message.time.getTime());
     }
 }
 

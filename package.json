@@ -35,8 +35,10 @@
   "dependencies": {
     "@types/d3": "^4.3.0",
     "@types/d3-time": "^1.0.4",
+    "@types/immutable": "^3.8.5",
     "@types/react-redux": "^4.4.33",
     "d3": "^4.4.0",
+    "immutable": "^3.8.1",
     "parse5": "git+https://github.com/inikulin/parse5.git",
     "react": "^15.3.2",
     "react-dom": "^15.3.2",
