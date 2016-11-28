@@ -18,7 +18,7 @@ function makeRelations(threads: MessageThread[]): Relation[] {
         const statedParties = Immutable.Set(thread.parties);
         const actualParties = Immutable.Set(thread.messages.map(msg => msg.author));
 
-        // Assume no one would do something pathological like set their Facebook names to the 
+        // Assume no one would do something pathological like set their Facebook names to the
         // format of the Facebook email. There's no way we could tell the difference.
         const parsedNames = actualParties.map(name => {
             const result = name.match(fbEmailRegex);
@@ -30,6 +30,39 @@ function makeRelations(threads: MessageThread[]): Relation[] {
         const unknownNames = Immutable.Set<string>(names).subtract(statedParties);
 
         return new Relation(thread, statedParties, unknownIds, unknownNames);
+    });
+}
+
+// This function handles two situations:
+// 1) Someone's first and last name are reversed in some messages.
+//    e.g. Chen Wu and Wu Chen both showing up.
+// 2) Someone has a middle name or a first or last name with a space, and they don't show up
+//    consistently.
+//    e.g. John Adam Smith and John Smith both showing up.
+function resolveNameOrdering(relations: Relation[]) {
+    relations.forEach(relation => {
+        const mapping = new Map<string, string>();
+        relation.unknownNames.forEach(unknown => {
+            const nameComponents = Immutable.Set(unknown.split(" "));
+            const matchCounts = relation.statedParties.toArray().map(stated => {
+                let match: [number, string] =
+                    [Immutable.Set(stated.split(" ")).intersect(nameComponents).size, stated];
+                return match;
+            });
+            const bestNumberOfMatchingComponents = _.max(matchCounts.map(count => count[0]));
+
+            // Only resolve a mapping if there is no tie.
+            const bests = matchCounts.filter(count => count[0] == bestNumberOfMatchingComponents);
+            if (bests.length == 1) {
+                mapping.set(unknown, bests[0][1]);
+            }
+        });
+        // Resolve mapping.
+        relation.thread.messages.forEach(message => {
+            if (mapping.has(message.author)) {
+                message.author = mapping.get(message.author);
+            }
+        })
     });
 }
 
@@ -45,11 +78,11 @@ function addKnownId(knownIds: Map<number, Immutable.Set<string>>, id: number, st
     }
 }
 
-function findMappingsByElimination(relation: Relation, 
+function findMappingsByElimination(relation: Relation,
                                    knownIds: Map<number, Immutable.Set<string>>) {
     const unknownIds = relation.unknownIds.filter(id => !knownIds.has(id));
     const knownParties = relation.unknownIds
-        .reduce((acc, id) => knownIds.has(id) ? acc.merge(knownIds.get(id)) : acc, 
+        .reduce((acc, id) => knownIds.has(id) ? acc.merge(knownIds.get(id)) : acc,
                 Immutable.Set<string>());
     const freeParties = relation.statedParties.subtract(knownParties);
     if (unknownIds.size == 1 && freeParties.size == 1) {
@@ -57,13 +90,10 @@ function findMappingsByElimination(relation: Relation,
     }
 }
 
-export function cleanup(threads: MessageThread[]) {
-    console.log("Cleaning up " + threads.length + " threads...");
 
-    const relations = makeRelations(threads);
-
+function makeIdMapping(relations: Relation[]): Map<number, Immutable.Set<string>> {
     const knownIds = new Map<number, Immutable.Set<string>>();
-    
+
     // Start by resolving Facebook Ids.
     // O(n^2) for simplicity since n should be relatively small
     // TODO: Doesn't solve all cases, but will do for now.
@@ -87,7 +117,11 @@ export function cleanup(threads: MessageThread[]) {
         }
     }
 
-    // Apply mapping
+    return knownIds;
+}
+
+
+function applyMapping(relations: Relation[], knownIds: Map<number, Immutable.Set<string>>) {
     relations.forEach(relation => {
         const idMapping = new Map<string, string>();
         relation.unknownIds.forEach(unknownId => {
@@ -110,4 +144,13 @@ export function cleanup(threads: MessageThread[]) {
             }
         });
     });
+}
+
+export function cleanup(threads: MessageThread[]) {
+    console.log("Cleaning up " + threads.length + " threads...");
+
+    const relations = makeRelations(threads);
+    resolveNameOrdering(relations);
+    const knownIds = makeIdMapping(relations);
+    applyMapping(relations, knownIds);
 }
