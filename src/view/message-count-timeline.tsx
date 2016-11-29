@@ -8,9 +8,12 @@ import { State } from '../state'
 
 interface MessageCountTimelineProps {
     msgCountByDate: [Date, number][]
+    maxMessagesInDay: number
 }
 
-const RenderMessageCountTimeline = function({ msgCountByDate }: MessageCountTimelineProps): JSX.Element {
+const RenderMessageCountTimeline = function(
+    { msgCountByDate, maxMessagesInDay }: MessageCountTimelineProps): JSX.Element {
+
     if (!msgCountByDate) {
         return null;
     }
@@ -39,7 +42,7 @@ const RenderMessageCountTimeline = function({ msgCountByDate }: MessageCountTime
         .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
     x.domain([msgCountByDate[0][0], msgCountByDate[msgCountByDate.length - 1][0]]);
-    y.domain([0, d3.max(msgCountByDate, function(d) { return d[1]; })]);
+    y.domain([0, maxMessagesInDay]);
 
     svg.append("path")
         .datum(msgCountByDate)
@@ -67,6 +70,7 @@ const RenderMessageCountTimeline = function({ msgCountByDate }: MessageCountTime
 const mapStateToProps = function(state : State): MessageCountTimelineProps {
     return {
         msgCountByDate: state.msgCountByDate,
+        maxMessagesInDay: state.maxMessagesInDay,
     }
 }
 

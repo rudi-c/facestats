@@ -25,6 +25,12 @@ export class MessageThread {
     }
 }
 
+export class ParseResults {
+    constructor(public threads: MessageThread[],
+                public yourName: string) {
+    }
+}
+
 class DomNode {
     ast: ASTElement;
 
@@ -134,7 +140,7 @@ function parseRaw(raw: string): DomNode {
     return new DomNode(document.childNodes[0] as ASTElement);
 }
 
-export function parseThreads(data: string): MessageThread[] {
+export function parseThreads(data: string): ParseResults {
     let dom = parseRaw(data);
     let contents = dom.body().getFirstByClass("contents");
     let name = contents.h1().text();
@@ -144,5 +150,5 @@ export function parseThreads(data: string): MessageThread[] {
     let threads_groups = contents.getAllByTag("div")
                                  .map(group => group.getAllByClass("thread"));
     let threads = [].concat.apply([], threads_groups).map(readMessageThread);
-    return threads;
+    return new ParseResults(threads, name);
 }

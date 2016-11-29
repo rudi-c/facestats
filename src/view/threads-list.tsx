@@ -11,14 +11,22 @@ import { ThreadInfo } from '../analysis/data'
 import { Actions } from '../actions'
 import { WorkerCommands } from '../analysis/worker-commands'
 
-interface ThreadsProps {
+interface StateProps {
     threads: ThreadInfo[],
     threadDetails: Immutable.Map<number, Data.ThreadDetails>
+    onSelectedWorker: (number) => any
     onChooseThread: (number) => any
 }
 
+interface DispatchProps {
+    onSelected: (number) => any
+}
+
+interface ThreadsProps extends StateProps, DispatchProps {
+}
+
 const RenderThreads = function(
-  { threads, threadDetails, onChooseThread }: ThreadsProps
+  { threads, threadDetails, onSelected, onSelectedWorker, onChooseThread }: ThreadsProps
   ): JSX.Element {
 
     const threadsList = threads.map(thread =>  {
@@ -47,29 +55,53 @@ const RenderThreads = function(
             );
         }
         return (
-          <li key={thread.id} onClick={onChooseThread(thread.id)}>
+          <div key={thread.id}>
+            <input type="checkbox" defaultChecked={false} onChange={(event) => 
+                { onSelected(thread.id); onSelectedWorker(thread.id) }
+            }/>
+            <span onClick={onChooseThread(thread.id)}>
             { thread.parties.join(", ") + " (" + thread.length + ")" }
+            </span>
             { detailsView }
-          </li>
+          </div>
         );
     });
     return (
-        <ul>
+        <div>
             {threadsList}
-        </ul>
+        </div>
     );
 }
 
-const mapStateToProps = function(state : State): ThreadsProps {
+const mapStateToProps = function(state : State): StateProps {
     return {
         threads: state.threads,
         threadDetails: state.threadDetails,
         onChooseThread: (threadId) => ((event) => {
             state.worker.postMessage(WorkerCommands.getThreadDetails(threadId));
         }),
+        onSelectedWorker: (threadId) => {
+            let newSelected: Immutable.Set<number>;
+            if (state.selectedThreadIds.has(threadId)) {
+                newSelected = state.selectedThreadIds.remove(threadId);
+            } else {
+                newSelected = state.selectedThreadIds.add(threadId);
+            }
+            state.worker.postMessage(
+                WorkerCommands.getMessageCountByDay(newSelected.toArray(), true)
+            );
+        },
     }
 }
 
-const Threads = connect(mapStateToProps)(RenderThreads)
+const mapDispatchToProps = function(dispatch): DispatchProps {
+    return {
+        onSelected: (threadId) => {
+            dispatch(Actions.threadChecked(threadId));
+        },
+    }
+}
+
+const Threads = connect(mapStateToProps, mapDispatchToProps)(RenderThreads)
 
 export default Threads

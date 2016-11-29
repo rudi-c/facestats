@@ -19,7 +19,7 @@ function onWorkerMessage(dispatch, worker) {
         switch (action.type) {
             // When the parsing is done.
             case "threads": 
-                worker.postMessage(WorkerCommands.getMessageCountByDay());
+                worker.postMessage(WorkerCommands.getMessageCountByDay(null));
                 break;
         }
 

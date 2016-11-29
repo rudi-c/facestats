@@ -13,12 +13,18 @@ interface WorkerState {
     threads: Map<number, MessageThread>
     threadDetails: Map<number, Data.ThreadDetails>
     conversations: Map<number, Message[][]>
+    yourName: string
+    earliestDate: Date
+    latestDate: Date
 }
 
 let state : WorkerState = {
     threads: null,
     threadDetails: new Map(),
     conversations: new Map(),
+    yourName: null,
+    earliestDate: null,
+    latestDate: null,
 }
 
 function findConversationsForThread(thread: MessageThread): Message[][] {
@@ -62,31 +68,46 @@ function analyzeThreadDetails(thread: MessageThread): Data.ThreadDetails {
     );
 }
 
+function calendarDate(timeDate: Date): Date {
+    return new Date(
+        timeDate.getFullYear(),
+        timeDate.getMonth(),
+        timeDate.getDate()
+    );
+}
+
 // Removes hours, minutes, etc, only keeps the days.
-function getMessageCalendarDates(): Date[] {
+function getMessageCalendarDates(threadIds: number[], includeAllMessages: boolean): Date[] {
+    let threadsToCount;
+    if (threadIds && threadIds.length > 0) {
+        threadsToCount = threadIds.map(id => state.threads.get(id));
+    } else {
+        threadsToCount = state.threads;
+    }
+
     const dates = [];
-    state.threads.forEach(thread => {
+    threadsToCount.forEach(thread => {
         thread.messages.forEach(message => {
-            const date = new Date(
-                message.time.getFullYear(),
-                message.time.getMonth(),
-                message.time.getDate()
-            );
-            dates.push(date);
+            if (includeAllMessages || message.author == state.yourName) {
+                dates.push(calendarDate(message.time));
+            }
         });
     });
     return dates;
 }
 
-function getMsgCountByDay(): [Date, number][] {
-    // Can't place Date directly into a Map<Date, number>, because equality of Date objects
-    // is only by reference.
-    const dates = getMessageCalendarDates();
-    const counts = countMap(dates.map(date => date.getTime()));
+function getMessagesTimeRange() {
+    const dates = [];
+    state.threads.forEach(thread => {
+        thread.messages.forEach(message => {
+            dates.push(message.time);
+        })
+    });
 
     let earliest = dates[0].getTime();
     let latest = dates[0].getTime();
-    counts.forEach((_, time) => {
+    dates.forEach(date => {
+        const time = date.getTime();
         if (time < earliest) {
             earliest = time;
         }
@@ -95,8 +116,22 @@ function getMsgCountByDay(): [Date, number][] {
         }
     });
 
-    let currentDate = new Date(earliest);
-    let latestDate = new Date(latest);
+    state.earliestDate = calendarDate(new Date(earliest));
+    state.latestDate = calendarDate(new Date(latest));
+}
+
+function getMsgCountByDay(threadIds: number[], includeAllMessages: boolean): [Date, number][] {
+    if (!state.earliestDate || !state.latestDate) {
+        getMessagesTimeRange();
+    }
+
+    // Can't place Date directly into a Map<Date, number>, because equality of Date objects
+    // is only by reference.
+    const dates = getMessageCalendarDates(threadIds, includeAllMessages);
+    const counts = countMap(dates.map(date => date.getTime()));
+
+    let currentDate = state.earliestDate;
+    let latestDate = state.latestDate;
     let countForAllDates: [Date, number][] = [];
     while (currentDate <= latestDate) {
        currentDate = new Date(currentDate.setDate(currentDate.getDate() + 1));
@@ -133,13 +168,15 @@ onmessage = function(message: MessageEvent) {
 
     switch (command.type) {
         case "parse_raw_data":
-            const threadsList = dedupThreads(parseThreads(command.rawData));
+            const parseResults = parseThreads(command.rawData);
+            const threadsList = dedupThreads(parseResults.threads);
             cleanup(threadsList);
             const threadInfos = threadsList.map(thread =>
                 new Data.ThreadInfo(thread.id, thread.parties, thread.messages.length)
             );
 
             state.threads = new Map();
+            state.yourName = parseResults.yourName;
             threadsList.forEach(thread => {
                 state.threads.set(thread.id, thread);
             })
@@ -153,7 +190,7 @@ onmessage = function(message: MessageEvent) {
         case "get_misc_info":
             break;
         case "get_msg_count_by_day":
-            const counts = getMsgCountByDay();
+            const counts = getMsgCountByDay(command.threadIds, command.includeAllMessages);
             sendUpdate(WorkerActions.gotMessageCountByDay(counts));
             break;
         case "get_thread_details":

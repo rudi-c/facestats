@@ -22,10 +22,19 @@ export module WorkerCommands {
 
     export interface GetMessageCountByDay {
         type: "get_msg_count_by_day";
+        threadIds: number[];
+        // If this is false, will only count the messages that you've written.
+        includeAllMessages: boolean
     }
 
-    export function getMessageCountByDay(): GetMessageCountByDay {
-        return { type: "get_msg_count_by_day" };
+    export function getMessageCountByDay(threadIds: number[],
+                                         includeAllMessages: boolean = true
+                                        ): GetMessageCountByDay {
+        return { 
+            type: "get_msg_count_by_day",
+            threadIds: threadIds,
+            includeAllMessages: includeAllMessages,
+        };
     }
 
     export interface GetThreadDetails {

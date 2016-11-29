@@ -6,7 +6,9 @@ export class State {
     threads: Data.ThreadInfo[]
     timeToParseInMs: number
     msgCountByDate: [Date, number][]
+    maxMessagesInDay: number
 
+    selectedThreadIds: Immutable.Set<number>
     threadDetails: Immutable.Map<number, Data.ThreadDetails>
 
     worker: any;
@@ -15,6 +17,8 @@ export class State {
         this.threads = [];
         this.timeToParseInMs = null;
         this.msgCountByDate = null;
+        this.maxMessagesInDay = 10;
+        this.selectedThreadIds = Immutable.Set<number>();
         this.threadDetails = Immutable.Map<number, Data.ThreadDetails>();
         this.worker = null;
     }
