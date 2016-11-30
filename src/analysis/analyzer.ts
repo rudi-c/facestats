@@ -120,7 +120,61 @@ function getMessagesTimeRange() {
     state.latestDate = calendarDate(new Date(latest));
 }
 
-function getMsgCountByDay(threadIds: number[], includeAllMessages: boolean): [Date, number][] {
+function applyBlur(counts: [Date, number][], blurRadius: number): [Date, number][] {
+    const blurFilter : number[] = [];
+    const sigma = blurRadius / 3;
+    let filterSum = 0;
+    for (let i = -blurRadius; i <= blurRadius; i++) {
+        const filterValue =
+            1 / sigma / Math.sqrt(2 * Math.PI) * Math.exp(- i * i / 2 / sigma / sigma);
+        filterSum += filterValue;
+        blurFilter[i + blurRadius] = filterValue;
+    }
+
+    // Normalize the filter to sum to 1.
+    for (let i = 0; i < 1 + 2 * blurRadius; i++) {
+        blurFilter[i] /= filterSum;
+    }
+
+    const result: [Date, number][] = [];
+
+    // Left edge
+    for (let i = 0; i < blurRadius; i++) {
+        let sum = 0;
+        let filterSum = 0;
+        for (let j = -i; j <= blurRadius; j++) {
+            let filterValue = blurFilter[-i + blurRadius];
+            filterSum += filterValue;
+            sum += filterValue * counts[i + j][1];
+        }
+        result.push([counts[i][0], sum / filterSum]);
+    }
+
+    // Middle part, where we know that the filter sums to 1.
+    for (let i = blurRadius; i < counts.length - blurRadius; i++) {
+        let sum = 0;
+        for (let j = -blurRadius; j <= blurRadius; j++) {
+            sum += blurFilter[j + blurRadius] * counts[i + j][1];
+        }
+        result.push([counts[i][0], sum]);
+    }
+
+    // Right edge
+    for (let i = counts.length - blurRadius; i < counts.length; i++) {
+        let sum = 0;
+        let filterSum = 0;
+        for (let j = -blurRadius; j < counts.length - i; j++) {
+            let filterValue = blurFilter[j + blurRadius];
+            filterSum += filterValue;
+            sum += filterValue * counts[i + j][1];
+        }
+        result.push([counts[i][0], sum / filterSum]);
+    }
+
+    return result;
+}
+
+function getMsgCountByDay(threadIds: number[], includeAllMessages: boolean, blurRadius: number): [Date, number][] {
     if (!state.earliestDate || !state.latestDate) {
         getMessagesTimeRange();
     }
@@ -141,6 +195,11 @@ function getMsgCountByDay(threadIds: number[], includeAllMessages: boolean): [Da
            countForAllDates.push([currentDate, 0]);
        }
     }
+
+    if (blurRadius > 0) {
+        countForAllDates = applyBlur(countForAllDates, blurRadius);
+    }
+
     return countForAllDates;
 }
 
@@ -190,7 +249,11 @@ onmessage = function(message: MessageEvent) {
         case "get_misc_info":
             break;
         case "get_msg_count_by_day":
-            const counts = getMsgCountByDay(command.threadIds, command.includeAllMessages);
+            const counts = getMsgCountByDay(
+                command.threadIds,
+                command.includeAllMessages,
+                command.blurRadius
+            );
             sendUpdate(WorkerActions.gotMessageCountByDay(counts));
             break;
         case "get_thread_details":

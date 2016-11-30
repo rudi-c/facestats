@@ -25,15 +25,18 @@ export module WorkerCommands {
         threadIds: number[];
         // If this is false, will only count the messages that you've written.
         includeAllMessages: boolean
+        blurRadius: number
     }
 
     export function getMessageCountByDay(threadIds: number[],
-                                         includeAllMessages: boolean = true
+                                         includeAllMessages: boolean = true,
+                                         blurRadius: number = 0
                                         ): GetMessageCountByDay {
         return { 
             type: "get_msg_count_by_day",
             threadIds: threadIds,
             includeAllMessages: includeAllMessages,
+            blurRadius: blurRadius,
         };
     }
 

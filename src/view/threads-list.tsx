@@ -88,7 +88,7 @@ const mapStateToProps = function(state : State): StateProps {
                 newSelected = state.selectedThreadIds.add(threadId);
             }
             state.worker.postMessage(
-                WorkerCommands.getMessageCountByDay(newSelected.toArray(), true)
+                WorkerCommands.getMessageCountByDay(newSelected.toArray(), true, 7)
             );
         },
     }
