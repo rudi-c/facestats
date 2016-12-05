@@ -14,7 +14,7 @@ const Analyzer = require("worker!../analysis/analyzer.ts")
 
 function onWorkerMessage(dispatch, worker) {
     return messageEvent => {
-        console.log(messageEvent);
+        console.log(messageEvent.data);
         
         const action = messageEvent.data as WorkerActions.t;
         switch (action.type) {

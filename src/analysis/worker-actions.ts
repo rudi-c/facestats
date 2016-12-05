@@ -65,6 +65,21 @@ export module WorkerActions {
         }
     }
 
+    export interface GotWordcloud {
+        type: "got_wordcloud";
+        threadId: number;
+        words: string[]
+    }
+
+    export function gotWordcloud(threadId: number,
+                                 words: string[]): GotWordcloud {
+        return {
+            type: "got_wordcloud",
+            threadId: threadId,
+            words: words,
+        }
+    }
+
     // Jane Street OCaml convention...
     export type t =
           ProgressParsed
@@ -72,4 +87,5 @@ export module WorkerActions {
         | GotMessageCountByDay
         | GotPunchcard
         | GotThreadDetails
+        | GotWordcloud
 }

@@ -61,10 +61,12 @@ function analyzeThreadDetails(thread: MessageThread): Data.ThreadDetails {
     const conversations = state.conversations.get(thread.id);
     const messageCounts = countMap(thread.messages.map(message => message.author)).entries();
     const starterCounts = countMap(conversations.map(conversation => conversation[0].author));
+    const enderCounts = countMap(conversations.map(conversation => conversation[conversation.length - 1].author));
 
     return new Data.ThreadDetails(
         Array.from(messageCounts),
-        Array.from(starterCounts)
+        Array.from(starterCounts),
+        Array.from(enderCounts)
     );
 }
 
@@ -222,6 +224,18 @@ function getPunchcard(threadIds: number[]): number[][] {
     return counts;
 }
 
+function getWordcloudWords(threadId: number): string[] {
+    const words = new Set<string>();
+    state.threads.get(threadId).messages.forEach(message => {
+        // http://stackoverflow.com/questions/6162600/how-do-you-split-a-javascript-string-by-spaces-and-punctuation
+        // TODO: Something better that can handle non-english characters
+        message.text.split(/\W+/).forEach(word => {
+            words.add(word.toLowerCase());
+        });
+    });
+    return Array.from(words).slice(0, 100);
+}
+
 // Group conversations are not unique (e.g. John, Adam, Sam could appear multiple times).
 // Individual conversations are not unique. There's a limit of 10,000 per thread (in the HTML data),
 // and I'm not sure if it could be broken in pieces for other reasons.
@@ -288,6 +302,10 @@ onmessage = function(message: MessageEvent) {
 
             const threadDetails = state.threadDetails.get(id);
             sendUpdate(WorkerActions.gotThreadDetails(id, threadDetails));
+            break;
+        case "get_wordcloud":
+            const words = getWordcloudWords(command.threadId);
+            sendUpdate(WorkerActions.gotWordcloud(command.threadId, words));
             break;
         default: const _exhaustiveCheck: never = command;
     }

@@ -9,6 +9,7 @@ export class ThreadInfo {
 export class ThreadDetails {
     constructor(public messageCount: [string, number][],
                 public conversationStartCount: [string, number][],
+                public conversationEndCount: [string, number][],
                ) {
     }
 }

@@ -64,6 +64,18 @@ export module WorkerCommands {
         };
     }
 
+    export interface GetWordcloud {
+        type: "get_wordcloud";
+        threadId: number;
+    }
+
+    export function getWordcloud(threadId: number): GetWordcloud {
+        return { 
+            type: "get_wordcloud",
+            threadId: threadId,
+        };
+    }
+
     // Jane Street OCaml convention...
     export type t = 
           ParseRawData 
@@ -71,4 +83,5 @@ export module WorkerCommands {
         | GetMessageCountByDay 
         | GetPunchcard
         | GetThreadDetails
+        | GetWordcloud
 }

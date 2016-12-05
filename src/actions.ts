@@ -71,6 +71,12 @@ function reduceWorker(state : State, action: WorkerActions.t): State {
                     action.threadId, action.details
                 )
             });
+        case "got_wordcloud":
+            return Object.assign({}, state, {
+                wordcloudWords: state.wordcloudWords.set(
+                    action.threadId, action.words
+                )
+            });
         default: const _exhaustiveCheck: never = action;
     }
 }

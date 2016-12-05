@@ -1,5 +1,6 @@
 import * as React from 'react';
 import { connect } from 'react-redux';
+import WordCloud from 'react-d3-cloud';
 
 import * as Immutable from 'immutable'
 
@@ -14,6 +15,7 @@ import { WorkerCommands } from '../analysis/worker-commands'
 interface StateProps {
     threads: ThreadInfo[],
     threadDetails: Immutable.Map<number, Data.ThreadDetails>
+    wordcloudWords: Immutable.Map<number, string[]>
     onSelectedWorker: (number) => any
     onChooseThread: (number) => any
 }
@@ -26,13 +28,21 @@ interface ThreadsProps extends StateProps, DispatchProps {
 }
 
 const RenderThreads = function(
-  { threads, threadDetails, onSelected, onSelectedWorker, onChooseThread }: ThreadsProps
+  { threads, threadDetails, wordcloudWords, onSelected, onSelectedWorker, onChooseThread }: ThreadsProps
   ): JSX.Element {
 
     const threadsList = threads.map(thread =>  {
         let detailsView = null;
         if (threadDetails.has(thread.id)) {
             const details = threadDetails.get(thread.id);
+
+            // let wordcloud = null;
+            // if (wordcloudWords.has(thread.id)) {
+            //     wordcloud = (
+            //         <WordCloud data={wordcloudWords.get(thread.id)} />
+            //     );
+            // }
+
             detailsView = (
                 <div>
                   <div>
@@ -46,6 +56,14 @@ const RenderThreads = function(
                   <div>
                     Conversations started by:
                     { details.conversationStartCount.map((info, id) => {
+                        const [author, count] = info;
+                        return (<p key={id}>{author}: {count}</p>);
+                      })
+                    }
+                  </div>
+                  <div>
+                    Conversations ended by:
+                    { details.conversationEndCount.map((info, id) => {
                         const [author, count] = info;
                         return (<p key={id}>{author}: {count}</p>);
                       })
@@ -77,8 +95,10 @@ const mapStateToProps = function(state : State): StateProps {
     return {
         threads: state.threads,
         threadDetails: state.threadDetails,
+        wordcloudWords: state.wordcloudWords,
         onChooseThread: (threadId) => ((event) => {
             state.worker.postMessage(WorkerCommands.getThreadDetails(threadId));
+            state.worker.postMessage(WorkerCommands.getWordcloud(threadId));
         }),
         onSelectedWorker: (threadId) => {
             let newSelected: Immutable.Set<number>;

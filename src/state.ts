@@ -11,6 +11,7 @@ export class State {
 
     selectedThreadIds: Immutable.Set<number>
     threadDetails: Immutable.Map<number, Data.ThreadDetails>
+    wordcloudWords: Immutable.Map<number, string[]>
 
     worker: any;
 
@@ -22,6 +23,7 @@ export class State {
         this.maxMessagesInDay = 10;
         this.selectedThreadIds = Immutable.Set<number>();
         this.threadDetails = Immutable.Map<number, Data.ThreadDetails>();
+        this.wordcloudWords = Immutable.Map<number, string[]>();
         this.worker = null;
     }
 }
