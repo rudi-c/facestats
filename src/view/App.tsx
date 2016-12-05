@@ -7,6 +7,7 @@ import { WorkerCommands } from '../analysis/worker-commands'
 
 import FileInput from './file-input'
 import MessageCountTimeline from './message-count-timeline'
+import Punchcard from './punchcard'
 import Threads from './threads-list'
 
 const Analyzer = require("worker!../analysis/analyzer.ts")
@@ -20,6 +21,7 @@ function onWorkerMessage(dispatch, worker) {
             // When the parsing is done.
             case "threads": 
                 worker.postMessage(WorkerCommands.getMessageCountByDay(null));
+                worker.postMessage(WorkerCommands.getPunchcard(null));
                 break;
         }
 
@@ -45,6 +47,7 @@ const RenderApp = function({ dispatch }) {
         <div>
             <FileInput onFileChange={onFileChange} />
             <MessageCountTimeline />
+            <Punchcard />
             <Threads />
         </div>
     );

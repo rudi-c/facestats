@@ -40,6 +40,18 @@ export module WorkerCommands {
         };
     }
 
+    export interface GetPunchcard {
+        type: "get_punchcard";
+        threadIds: number[];
+    }
+
+    export function getPunchcard(threadIds: number[]): GetPunchcard {
+        return { 
+            type: "get_punchcard",
+            threadIds: threadIds,
+        };
+    }
+
     export interface GetThreadDetails {
         type: "get_thread_details";
         threadId: number;
@@ -53,5 +65,10 @@ export module WorkerCommands {
     }
 
     // Jane Street OCaml convention...
-    export type t = ParseRawData | GetMiscInfo | GetMessageCountByDay | GetThreadDetails
+    export type t = 
+          ParseRawData 
+        | GetMiscInfo 
+        | GetMessageCountByDay 
+        | GetPunchcard
+        | GetThreadDetails
 }

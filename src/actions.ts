@@ -61,6 +61,10 @@ function reduceWorker(state : State, action: WorkerActions.t): State {
                 msgCountByDate: action.value,
                 maxMessagesInDay: Math.max(max, state.maxMessagesInDay),
             });
+        case "got_punchcard":
+            return Object.assign({}, state, {
+                punchcard: action.value,
+            });
         case "got_thread_details":
             return Object.assign({}, state, {
                 threadDetails: state.threadDetails.set(

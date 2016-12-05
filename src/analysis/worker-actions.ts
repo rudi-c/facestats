@@ -37,13 +37,26 @@ export module WorkerActions {
         }
     }
 
+    export interface GotPunchcard {
+        type: "got_punchcard";
+        // array of (array of counts by hour) by day of week
+        value: number[][];
+    }
+
+    export function gotPunchcard(value: number[][]): GotPunchcard {
+        return {
+            type: "got_punchcard",
+            value: value
+        }
+    }
+
     export interface GotThreadDetails {
         type: "got_thread_details";
         threadId: number;
         details: Data.ThreadDetails;
     }
 
-    export function gotThreadDetails(threadId: number, 
+    export function gotThreadDetails(threadId: number,
                                      details: Data.ThreadDetails): GotThreadDetails {
         return {
             type: "got_thread_details",
@@ -53,5 +66,10 @@ export module WorkerActions {
     }
 
     // Jane Street OCaml convention...
-    export type t = ProgressParsed | Threads | GotMessageCountByDay | GotThreadDetails
+    export type t =
+          ProgressParsed
+        | Threads
+        | GotMessageCountByDay
+        | GotPunchcard
+        | GotThreadDetails
 }

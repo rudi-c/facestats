@@ -203,6 +203,25 @@ function getMsgCountByDay(threadIds: number[], includeAllMessages: boolean, blur
     return countForAllDates;
 }
 
+function getPunchcard(threadIds: number[]): number[][] {
+    const counts = Array(7).fill(null).map(() => Array(24).fill(0));
+
+    let threadsToCount;
+    if (threadIds && threadIds.length > 0) {
+        threadsToCount = threadIds.map(id => state.threads.get(id));
+    } else {
+        threadsToCount = state.threads;
+    }
+
+    threadsToCount.forEach(thread => {
+        thread.messages.forEach(message => {
+            counts[message.time.getDay()][message.time.getHours()] += 1;
+        });
+    });
+
+    return counts;
+}
+
 // Group conversations are not unique (e.g. John, Adam, Sam could appear multiple times).
 // Individual conversations are not unique. There's a limit of 10,000 per thread (in the HTML data),
 // and I'm not sure if it could be broken in pieces for other reasons.
@@ -255,6 +274,10 @@ onmessage = function(message: MessageEvent) {
                 command.blurRadius
             );
             sendUpdate(WorkerActions.gotMessageCountByDay(counts));
+            break;
+        case "get_punchcard":
+            const punchcard = getPunchcard(command.threadIds);
+            sendUpdate(WorkerActions.gotPunchcard(punchcard));
             break;
         case "get_thread_details":
             const id = command.threadId;

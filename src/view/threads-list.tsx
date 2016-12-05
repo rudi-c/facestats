@@ -90,6 +90,9 @@ const mapStateToProps = function(state : State): StateProps {
             state.worker.postMessage(
                 WorkerCommands.getMessageCountByDay(newSelected.toArray(), true, 7)
             );
+            state.worker.postMessage(
+                WorkerCommands.getPunchcard(newSelected.toArray())
+            );
         },
     }
 }
