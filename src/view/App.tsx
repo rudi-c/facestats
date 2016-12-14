@@ -6,6 +6,7 @@ import { WorkerActions } from '../analysis/worker-actions'
 import { WorkerCommands } from '../analysis/worker-commands'
 
 import FileInput from './file-input'
+import ConversationDonut from './conversation-donut'
 import MessageCountTimeline from './message-count-timeline'
 import Punchcard from './punchcard'
 import Threads from './threads-list'
@@ -46,6 +47,7 @@ const RenderApp = function({ dispatch }) {
     return (
         <div>
             <FileInput onFileChange={onFileChange} />
+            <ConversationDonut />
             <MessageCountTimeline />
             <Punchcard />
             <Threads />
