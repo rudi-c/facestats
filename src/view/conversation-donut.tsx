@@ -7,6 +7,7 @@ import { connect } from 'react-redux';
 
 import * as d3 from 'd3';
 
+import * as Data from '../analysis/data'
 import { State } from '../state'
 
 const styles = require('../styles/main.css');
@@ -14,6 +15,10 @@ const styles = require('../styles/main.css');
 var width = 960,
     height = 450,
     radius = Math.min(width, height) / 2;
+
+interface Props {
+    miscInfo: Data.MiscInfo
+}
 
 // http://bl.ocks.org/dbuezas/9306799
 // https://www.sitepoint.com/how-react-makes-your-d3-better/
@@ -43,6 +48,10 @@ class AnimatedDonut extends React.Component<any, any> {
         var color = d3.scaleOrdinal(d3.schemeCategory20)
             .domain(["Lorem ipsum", "dolor sit", "amet", "consectetur", "adipisicing", "elit", "sed", "do", "eiusmod", "tempor", "incididunt"])
             .range(["#98abc5", "#8a89a6", "#7b6888", "#6b486b", "#a05d56", "#d0743c", "#ff8c00"]);
+
+        var data = this.props.proportions.map(([threadName, messageCount]) => {
+            return { label: threadName, value: messageCount };
+        });
 
         function randomData (){
             var labels = color.domain();
@@ -140,8 +149,8 @@ class AnimatedDonut extends React.Component<any, any> {
                 .remove();
         };
 
-        change(randomData());
-        change(randomData());
+        change(data);
+        change(data);
 
         d3.select(".randomize")
             .on("click", function(){
@@ -160,19 +169,24 @@ class AnimatedDonut extends React.Component<any, any> {
     }
 }
 
-const RenderConversationDonut = function({}): JSX.Element {
+const RenderConversationDonut = function({ miscInfo }): JSX.Element {
+    if (!miscInfo) {
+        return null;
+    }
+
     return (
         <div className="donut">
             <button className="randomize">randomize</button> 
             <ReactTransitionGroup component="svg">
-                <AnimatedDonut />
+                <AnimatedDonut proportions={miscInfo.messageProportions} />
             </ReactTransitionGroup>
         </div>
     );
 }
 
-const mapStateToProps = function(state : State) {
+const mapStateToProps = function(state : State): Props {
     return {
+        miscInfo: state.miscInfo
     }
 }
 

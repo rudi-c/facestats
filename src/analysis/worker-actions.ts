@@ -25,6 +25,18 @@ export module WorkerActions {
         }
     }
 
+    export interface GotMiscInfo {
+        type: "got_misc_info";
+        info: Data.MiscInfo;
+    }
+
+    export function gotMiscInfo(info: Data.MiscInfo): GotMiscInfo {
+        return {
+            type: "got_misc_info",
+            info: info
+        }
+    }
+
     export interface GotMessageCountByDay {
         type: "got_message_count_by_day";
         value: [Date, number][];
@@ -84,6 +96,7 @@ export module WorkerActions {
     export type t =
           ProgressParsed
         | Threads
+        | GotMiscInfo
         | GotMessageCountByDay
         | GotPunchcard
         | GotThreadDetails

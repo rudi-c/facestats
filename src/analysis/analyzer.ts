@@ -4,7 +4,7 @@ import * as Data from './data'
 import { WorkerActions } from './worker-actions'
 import { WorkerCommands } from './worker-commands'
 
-import { countMap, sendUpdate } from './helpers'
+import { countMap, sendUpdate, sum } from './helpers'
 import { cleanup } from './cleanup'
 
 import { parseThreads, Message, MessageThread } from './parse-threads'
@@ -25,6 +25,16 @@ let state : WorkerState = {
     yourName: null,
     earliestDate: null,
     latestDate: null,
+}
+
+function simplifiedThreadName(thread: MessageThread): string {
+    const withoutYou = thread.parties.filter(name => name !== state.yourName);
+    if (withoutYou.length >= 4) {
+        // TODO: Could show the person who started the most conversations.
+        return withoutYou[0] + " and " + (withoutYou.length - 1) + " others"
+    } else {
+        return withoutYou.join(" ");
+    }
 }
 
 function findConversationsForThread(thread: MessageThread): Message[][] {
@@ -236,6 +246,27 @@ function getWordcloudWords(threadId: number): string[] {
     return Array.from(words).slice(0, 100);
 }
 
+function getMessageProportions(): [string, number][] {
+    const sorted = _.sortBy(
+        Array.from(state.threads.values()), 
+        thread => -thread.messages.length
+    );
+    const totalMessages = sum(sorted.map(thread => thread.messages.length));
+    let totalSoFar = 0;
+    let proportions = [];
+    for (let thread of sorted) {
+        totalSoFar += thread.messages.length;
+        proportions.push([simplifiedThreadName(thread), thread.messages.length]);
+        // There will be too much of a long tail of threads with very few
+        // messages, group them into "others".
+        if (thread.messages.length / totalMessages < 0.01) {
+            proportions.push(["Others", totalMessages - totalSoFar]);
+            break;
+        }
+    }
+    return proportions;
+}
+
 // Group conversations are not unique (e.g. John, Adam, Sam could appear multiple times).
 // Individual conversations are not unique. There's a limit of 10,000 per thread (in the HTML data),
 // and I'm not sure if it could be broken in pieces for other reasons.
@@ -280,6 +311,10 @@ onmessage = function(message: MessageEvent) {
             sendUpdate(WorkerActions.threads(sortedThreadInfos));
             break;
         case "get_misc_info":
+            const proportions = getMessageProportions();
+            sendUpdate(WorkerActions.gotMiscInfo(
+                new Data.MiscInfo(state.yourName, proportions))
+            );
             break;
         case "get_msg_count_by_day":
             const counts = getMsgCountByDay(

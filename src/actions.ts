@@ -55,6 +55,10 @@ function reduceWorker(state : State, action: WorkerActions.t): State {
             return Object.assign({}, state, {
                 timeToParseInMs: action.timeInMs
             });
+        case "got_misc_info":
+            return Object.assign({}, state, {
+                miscInfo: action.info,
+            });
         case "got_message_count_by_day":
             const max = _.max(action.value.map(pair => pair[1]));
             return Object.assign({}, state, {

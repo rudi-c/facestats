@@ -14,6 +14,10 @@ export function countMap<T>(values: T[]): Map<T, number> {
     return counts;
 }
 
+export function sum(values: number[]): number {
+    return values.reduce((a, b) => a + b);
+}
+
 export function sendUpdate(message: WorkerActions.t) {
     (postMessage as any)(message);
 }
