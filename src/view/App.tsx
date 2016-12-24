@@ -2,6 +2,7 @@ import * as React from 'react';
 import { connect } from 'react-redux';
 
 import { Actions } from '../actions'
+import { State } from '../state'
 import { WorkerActions } from '../analysis/worker-actions'
 import { WorkerCommands } from '../analysis/worker-commands'
 
@@ -12,6 +13,16 @@ import Punchcard from './punchcard'
 import Threads from './threads-list'
 
 const Analyzer = require("worker!../analysis/analyzer.ts")
+
+interface StateProps {
+}
+
+interface DispatchProps {
+    onFileChange: (string) => any
+}
+
+interface AppProps extends StateProps, DispatchProps {
+}
 
 function onWorkerMessage(dispatch, worker) {
     return messageEvent => {
@@ -30,20 +41,7 @@ function onWorkerMessage(dispatch, worker) {
     }
 }
 
-const RenderApp = function({ dispatch }) {
-
-    const onFileChange = function(result) {
-        if ((window as any).Worker) {
-            let worker = new Analyzer();
-            worker.addEventListener('message', onWorkerMessage(dispatch, worker));
-            dispatch(Actions.workerCreated(worker));
-            console.log("Sending to worker");
-            worker.postMessage(WorkerCommands.parseRawData(result));
-        } else {
-            console.warn('Web workers not supported');
-        }
-    }
-
+const RenderApp = function({ onFileChange }: AppProps) {
     return (
         <div>
             <FileInput onFileChange={onFileChange} />
@@ -55,6 +53,26 @@ const RenderApp = function({ dispatch }) {
     );
 }
 
-const App = connect()(RenderApp)
+const mapStateToProps = function(state : State): StateProps {
+    return {};
+}
+
+const mapDispatchToProps = function(dispatch): DispatchProps {
+    return {
+        onFileChange: (result) => {
+            if ((window as any).Worker) {
+                let worker = new Analyzer();
+                worker.addEventListener('message', onWorkerMessage(dispatch, worker));
+                dispatch(Actions.workerCreated(worker));
+                console.log("Sending to worker");
+                worker.postMessage(WorkerCommands.parseRawData(result));
+            } else {
+                console.warn('Web workers not supported');
+            }
+        },
+    }
+}
+
+const App = connect(mapStateToProps, mapDispatchToProps)(RenderApp)
 
 export default App
