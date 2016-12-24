@@ -1,0 +1,5 @@
+Make sure you have pip installed, then
+
+```
+pip install names loremipsum yattag
+```
