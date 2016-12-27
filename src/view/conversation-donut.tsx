@@ -10,7 +10,7 @@ import * as d3 from 'd3';
 import * as Data from '../analysis/data'
 import { State } from '../state'
 
-const styles = require('../styles/main.css');
+const styles = require('../styles/main.scss');
 
 var width = 960,
     height = 450,

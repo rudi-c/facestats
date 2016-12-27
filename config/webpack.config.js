@@ -25,6 +25,7 @@ module.exports = {
       { test: /\.css$/, loader: "style-loader!css-loader" },
       { test: /\.tsx?$/, loaders: ['babel', 'ts-loader'] },
       { test: /\.json$/, include: /node_modules/, loader: 'json-loader' },
+      { test: /\.scss$/, loaders: ["style-loader", "css-loader", "sass-loader"] },
     ]
   },
   plugins: [
