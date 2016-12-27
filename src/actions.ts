@@ -49,12 +49,11 @@ function reduceWorker(state : State, action: WorkerActions.t): State {
     switch (action.type) {
         case "threads": 
             return Object.assign({}, state, {
-                threads: action.threads
+                threads: action.threads,
+                timeToParseInMs: action.parsingTimeInMs
             });
-        case "progress_parsed": 
-            return Object.assign({}, state, {
-                timeToParseInMs: action.timeInMs
-            });
+        case "ready_for_next_chunk": 
+            return state;
         case "got_misc_info":
             return Object.assign({}, state, {
                 miscInfo: action.info,

@@ -1,13 +1,15 @@
 export module WorkerCommands {
-    export interface ParseRawData {
-        type: "parse_raw_data";
-        rawData: string;
+    export interface ParseChunk {
+        type: "parse_chunk";
+        chunk: string;
+        isLastChunk: boolean;
     }
 
-    export function parseRawData(rawData: string): ParseRawData {
+    export function parseChunk(chunk: string, isLastChunk: boolean): ParseChunk {
         return {
-            type: "parse_raw_data",
-            rawData: rawData,
+            type: "parse_chunk",
+            chunk: chunk,
+            isLastChunk: isLastChunk,
         }
     }
 
@@ -78,7 +80,7 @@ export module WorkerCommands {
 
     // Jane Street OCaml convention...
     export type t = 
-          ParseRawData 
+          ParseChunk 
         | GetMiscInfo 
         | GetMessageCountByDay 
         | GetPunchcard

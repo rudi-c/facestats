@@ -4,25 +4,23 @@ export module WorkerActions {
     export interface Threads {
         type: "threads";
         threads: Data.ThreadInfo[];
+        parsingTimeInMs: number
     }
 
-    export function threads(threads: Data.ThreadInfo[]): Threads {
+    export function threads(threads: Data.ThreadInfo[], time: number): Threads {
         return {
             type: "threads",
-            threads: threads
+            threads: threads,
+            parsingTimeInMs: time
         }
     }
 
-    export interface ProgressParsed {
-        type: "progress_parsed";
-        timeInMs: number;
+    export interface ReadyForNextChunk {
+        type: "ready_for_next_chunk";
     }
 
-    export function progressParsed(time: number): ProgressParsed {
-        return {
-            type: "progress_parsed",
-            timeInMs: time
-        }
+    export function readyForNextChunk(): ReadyForNextChunk {
+        return { type: "ready_for_next_chunk" };
     }
 
     export interface GotMiscInfo {
@@ -94,7 +92,7 @@ export module WorkerActions {
 
     // Jane Street OCaml convention...
     export type t =
-          ProgressParsed
+          ReadyForNextChunk
         | Threads
         | GotMiscInfo
         | GotMessageCountByDay

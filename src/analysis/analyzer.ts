@@ -7,7 +7,7 @@ import { WorkerCommands } from './worker-commands'
 import { countMap, sendUpdate, sum } from './helpers'
 import { cleanup } from './cleanup'
 
-import { parseThreads, Message, MessageThread } from './parse-threads'
+import { ThreadParser, Message, MessageThread } from './parse-threads'
 
 interface WorkerState {
     threads: Map<number, MessageThread>
@@ -16,6 +16,7 @@ interface WorkerState {
     yourName: string
     earliestDate: Date
     latestDate: Date
+    parser: ThreadParser
 }
 
 let state : WorkerState = {
@@ -25,6 +26,7 @@ let state : WorkerState = {
     yourName: null,
     earliestDate: null,
     latestDate: null,
+    parser: null,
 }
 
 function simplifiedThreadName(thread: MessageThread): string {
@@ -282,33 +284,49 @@ function dedupThreads(threads: MessageThread[]): MessageThread[] {
         );
 }
 
+function parseChunk(chunk, isLastChunk) {
+    if (!state.parser) {
+        state.parser = new ThreadParser();
+    }
+    state.parser.onChunk(chunk);
+    if (isLastChunk) {
+        const parseResults = state.parser.finish();
+        const threadsList = dedupThreads(parseResults.threads);
+        cleanup(threadsList);
+        const threadInfos = threadsList.map(thread =>
+            new Data.ThreadInfo(thread.id, thread.parties, thread.messages.length)
+        );
+
+        state.threads = new Map();
+        state.yourName = parseResults.yourName;
+        threadsList.forEach(thread => {
+            state.threads.set(thread.id, thread);
+        })
+
+        const sortedThreadInfos = _.sortBy(threadInfos, info => -info.length);
+
+        // TODO: Handle case of 0 threads or 0 messages.
+
+        const endTime = new Date().getTime();
+        const parseTime = endTime - state.parser.parseStartTime;
+        sendUpdate(WorkerActions.threads(sortedThreadInfos, parseTime));
+
+        state.parser = null;
+    } else {
+        sendUpdate(WorkerActions.readyForNextChunk());
+    }
+}
+
 onmessage = function(message: MessageEvent) {
     const command: WorkerCommands.t = message.data;
 
-    if (command.type != 'parse_raw_data' && !state.threads) {
+    if (command.type != 'parse_chunk' && !state.threads) {
         console.error("Expected worker state to contain parsed threads!");
     }
 
     switch (command.type) {
-        case "parse_raw_data":
-            const parseResults = parseThreads(command.rawData);
-            const threadsList = dedupThreads(parseResults.threads);
-            cleanup(threadsList);
-            const threadInfos = threadsList.map(thread =>
-                new Data.ThreadInfo(thread.id, thread.parties, thread.messages.length)
-            );
-
-            state.threads = new Map();
-            state.yourName = parseResults.yourName;
-            threadsList.forEach(thread => {
-                state.threads.set(thread.id, thread);
-            })
-
-            const sortedThreadInfos = _.sortBy(threadInfos, info => -info.length);
-
-            // TODO: Handle case of 0 threads or 0 messages.
-
-            sendUpdate(WorkerActions.threads(sortedThreadInfos));
+        case "parse_chunk":
+            parseChunk(command.chunk, command.isLastChunk);
             break;
         case "get_misc_info":
             const proportions = getMessageProportions();

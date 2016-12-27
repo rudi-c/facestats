@@ -170,66 +170,83 @@ const rootHandler = new Handler("")
     .withChildHandlers([htmlHandler])
     .withOnFinish(firstChild);
 
-export function parseThreads(data: string): ParseResults {
-    let handlerStack: Handler[] = [rootHandler];
-    let childrenStack: any[][] = [[]];
-    let lastAddedTextChild = false;
+export class ThreadParser {
+    public parseStartTime: number
 
-    let start = new Date().getTime();
-    const parser = new htmlparser2.Parser({
-        onopentag: (name, attribs) => {
-            for (let handler of _.last(handlerStack).childHandlers) {
-                if (handler.matches(name, attribs)) {
-                    handlerStack.push(handler);
-                    childrenStack.push([]);
-                    lastAddedTextChild = false;
-                    return;
+    private handlerStack: Handler[]
+    private childrenStack: any[][]
+    private lastAddedTextChild: boolean
+    private parser: any
+
+    constructor() {
+        this.handlerStack = [rootHandler];
+        this.childrenStack = [[]];
+        this.lastAddedTextChild = false;
+        this.initParser();
+    }
+
+    initParser() {
+        this.parseStartTime = new Date().getTime();
+        this.parser = new htmlparser2.Parser({
+            onopentag: (name, attribs) => {
+                for (let handler of _.last(this.handlerStack).childHandlers) {
+                    if (handler.matches(name, attribs)) {
+                        this.handlerStack.push(handler);
+                        this.childrenStack.push([]);
+                        this.lastAddedTextChild = false;
+                        return;
+                    }
                 }
-            }
-            console.error("No matching handler found!");
-            console.error(name);
-            console.error(attribs);
-            // TODO: Proper error handling
-            throw "";
-        },
-        ontext: text => {
-            const children = _.last(childrenStack);
-            // Sometimes text gets broken up into multiple text events. For example,
-            // when special characters like @ get represented as &#064;
-            // TODO: Fix O(n^2) behavior here if this code gets shared (we won't run
-            // into this kind of input in practice in this application).
-            if (lastAddedTextChild) {
-                children[children.length - 1] += text;
-            } else {
-                children.push(text);
-            }
-            lastAddedTextChild = true;
-        },
-        onclosetag: name => {
-            const handler = _.last(handlerStack);
-            const children = _.last(childrenStack);
-            let result;
-            if (children.length === 0) {
-                // Something like <p></p> doesn't trigger the onText event,
-                // but in most cases we probably still want to interpret that
-                // as the empty string.
-                result = handler.onFinish([""]);
-            } else {
-                result = handler.onFinish(children);
-            }
-            handlerStack.pop();
-            childrenStack.pop();
-            lastAddedTextChild = false;
-            if (result !== undefined) {
-                _.last(childrenStack).push(result);
-            }
-        },
-    }, { decodeEntities: true });
-    parser.write(data);
-    parser.end();
-    let end = new Date().getTime();
-    sendUpdate(WorkerActions.progressParsed(end - start));
+                console.error("No matching handler found!");
+                console.error(name);
+                console.error(attribs);
+                // TODO: Proper error handling
+                throw "";
+            },
+            ontext: text => {
+                const children = _.last(this.childrenStack);
+                // Sometimes text gets broken up into multiple text events. For example,
+                // when special characters like @ get represented as &#064;
+                // TODO: Fix O(n^2) behavior here if this code gets shared (we won't run
+                // into this kind of input in practice in this application).
+                if (this.lastAddedTextChild) {
+                    children[children.length - 1] += text;
+                } else {
+                    children.push(text);
+                }
+                this.lastAddedTextChild = true;
+            },
+            onclosetag: name => {
+                const handler = _.last(this.handlerStack);
+                const children = _.last(this.childrenStack);
+                let result;
+                if (children.length === 0) {
+                    // Something like <p></p> doesn't trigger the onText event,
+                    // but in most cases we probably still want to interpret that
+                    // as the empty string.
+                    result = handler.onFinish([""]);
+                } else {
+                    result = handler.onFinish(children);
+                }
+                this.handlerStack.pop();
+                this.childrenStack.pop();
+                this.lastAddedTextChild = false;
+                if (result !== undefined) {
+                    _.last(this.childrenStack).push(result);
+                }
+            },
+        }, { decodeEntities: true });
+    }
 
-    const [[result]] = childrenStack;
-    return result;
+    onChunk(chunk: string) {
+        this.parser.write(chunk);
+    }
+
+    finish() {
+        this.parser.end();
+        const end = new Date().getTime();
+        console.log("Total parsing time: " + (end - this.parseStartTime));
+        const [[result]] = this.childrenStack;
+        return result;
+    }
 }

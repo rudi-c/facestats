@@ -14,22 +14,8 @@ class FileInputHelper extends React.Component<any, any> {
     }
   }
   handleChange = e => {
-    let file = e.target.files[0];
-
-    new Promise((resolve, reject) => {
-      let reader = new FileReader();
-
-      reader.onload = e => {
-        console.log("File loaded");
-        resolve(reader.result);
-      };
-
-      console.log("Start reading file...");
-      reader.readAsText(file);
-    })
-    .then(result => {
-      this.props.onChange(result);
-    });
+    const file = e.target.files[0];
+    this.props.onChange(file);
   }
   render() {
     return <input type="file" onChange={this.handleChange} />;

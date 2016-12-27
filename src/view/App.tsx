@@ -6,6 +6,7 @@ import { State } from '../state'
 import { WorkerActions } from '../analysis/worker-actions'
 import { WorkerCommands } from '../analysis/worker-commands'
 
+import ChunkedFileReader from './chunked-file-reader'
 import FileInput from './file-input'
 import ConversationDonut from './conversation-donut'
 import MessageCountTimeline from './message-count-timeline'
@@ -18,18 +19,22 @@ interface StateProps {
 }
 
 interface DispatchProps {
-    onFileChange: (string) => any
+    onFileChange: (any) => any
 }
 
 interface AppProps extends StateProps, DispatchProps {
 }
 
-function onWorkerMessage(dispatch, worker) {
+function onWorkerMessage(dispatch, worker, fileReader) {
     return messageEvent => {
         console.log(messageEvent.data);
         
         const action = messageEvent.data as WorkerActions.t;
         switch (action.type) {
+            // On new chunk
+            case "ready_for_next_chunk":
+                fileReader.gotChunk();
+                break;
             // When the parsing is done.
             case "threads": 
                 worker.postMessage(WorkerCommands.getMiscInfo());
@@ -60,18 +65,19 @@ const mapStateToProps = function(state : State): StateProps {
 
 const mapDispatchToProps = function(dispatch): DispatchProps {
     return {
-        onFileChange: (result) => {
+        onFileChange: (file) => {
             if ((window as any).Worker) {
-                let worker = new Analyzer();
-                worker.addEventListener('message', onWorkerMessage(dispatch, worker));
+                const worker = new Analyzer();
+                const fileReader = new ChunkedFileReader(file, worker);
+                worker.addEventListener('message', 
+                    onWorkerMessage(dispatch, worker, fileReader));
                 dispatch(Actions.workerCreated(worker));
-                console.log("Sending to worker");
-                worker.postMessage(WorkerCommands.parseRawData(result));
+                fileReader.startReading();
             } else {
                 console.warn('Web workers not supported');
             }
         },
-    }
+    };
 }
 
 const App = connect(mapStateToProps, mapDispatchToProps)(RenderApp)
