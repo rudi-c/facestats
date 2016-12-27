@@ -35,11 +35,13 @@
     "webpack-notifier": "^1.4.1"
   },
   "dependencies": {
+    "@types/aphrodite": "^0.5.4",
     "@types/d3": "^4.3.0",
     "@types/d3-time": "^1.0.4",
     "@types/immutable": "^3.8.5",
     "@types/react-addons-transition-group": "^0.14.17",
     "@types/react-redux": "^4.4.33",
+    "aphrodite": "^1.1.0",
     "d3": "^4.4.0",
     "d3-cloud": "^1.2.1",
     "immutable": "^3.8.1",
@@ -50,6 +52,7 @@
     "react-d3-cloud": "^0.3.0",
     "react-dom": "^15.3.2",
     "react-faux-dom": "^3.0.0",
+    "react-progressbar": "^1.4.3",
     "react-redux": "^4.4.6",
     "redux": "^3.6.0",
     "worker-loader": "^0.7.1"

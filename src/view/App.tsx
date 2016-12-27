@@ -1,5 +1,8 @@
 import * as React from 'react';
 import { connect } from 'react-redux';
+import { StyleSheet, css } from 'aphrodite';
+
+import Progress from 'react-progressbar'
 
 import { Actions } from '../actions'
 import { State } from '../state'
@@ -16,6 +19,9 @@ import Threads from './threads-list'
 const Analyzer = require("worker!../analysis/analyzer.ts")
 
 interface StateProps {
+    isLoadingFile: boolean
+    hasLoadedFile: boolean
+    parsingProgress: number
 }
 
 interface DispatchProps {
@@ -27,8 +33,8 @@ interface AppProps extends StateProps, DispatchProps {
 
 function onWorkerMessage(dispatch, worker, fileReader) {
     return messageEvent => {
-        console.log(messageEvent.data);
-        
+        // console.log(messageEvent.data);
+
         const action = messageEvent.data as WorkerActions.t;
         switch (action.type) {
             // On new chunk
@@ -36,7 +42,7 @@ function onWorkerMessage(dispatch, worker, fileReader) {
                 fileReader.gotChunk();
                 break;
             // When the parsing is done.
-            case "threads": 
+            case "threads":
                 worker.postMessage(WorkerCommands.getMiscInfo());
                 worker.postMessage(WorkerCommands.getMessageCountByDay(null));
                 worker.postMessage(WorkerCommands.getPunchcard(null));
@@ -47,20 +53,46 @@ function onWorkerMessage(dispatch, worker, fileReader) {
     }
 }
 
-const RenderApp = function({ onFileChange }: AppProps) {
-    return (
-        <div>
-            <FileInput onFileChange={onFileChange} />
-            <ConversationDonut />
-            <MessageCountTimeline />
-            <Punchcard />
-            <Threads />
-        </div>
-    );
+const styles = StyleSheet.create({
+    inputForm: {
+        width: '300px'
+    }
+});
+
+const RenderApp = function({ isLoadingFile,
+                             hasLoadedFile,
+                             parsingProgress,
+                             onFileChange }: AppProps) {
+    if (hasLoadedFile) {
+        return (
+            <div>
+                <ConversationDonut />
+                <MessageCountTimeline />
+                <Punchcard />
+                <Threads />
+            </div>
+        );
+    } else if (isLoadingFile) {
+        return (
+            <div className={"container " + css(styles.inputForm)}>
+                <Progress completed={Math.floor(parsingProgress * 100)} />
+            </div>
+        )
+    } else {
+        return (
+            <div className={"container " + css(styles.inputForm)}>
+                <FileInput onFileChange={onFileChange} />
+            </div>
+        );
+    }
 }
 
 const mapStateToProps = function(state : State): StateProps {
-    return {};
+    return {
+        isLoadingFile: state.worker !== null,
+        hasLoadedFile: state.threads !== null,
+        parsingProgress: state.parsingProgress
+    };
 }
 
 const mapDispatchToProps = function(dispatch): DispatchProps {
@@ -68,8 +100,8 @@ const mapDispatchToProps = function(dispatch): DispatchProps {
         onFileChange: (file) => {
             if ((window as any).Worker) {
                 const worker = new Analyzer();
-                const fileReader = new ChunkedFileReader(file, worker);
-                worker.addEventListener('message', 
+                const fileReader = new ChunkedFileReader(file, worker, dispatch);
+                worker.addEventListener('message',
                     onWorkerMessage(dispatch, worker, fileReader));
                 dispatch(Actions.workerCreated(worker));
                 fileReader.startReading();

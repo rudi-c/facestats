@@ -28,6 +28,18 @@ export module Actions {
         }
     }
 
+    export interface UpdateProgress {
+        type: "update_progress";
+        progress: number,
+    }
+
+    export function updateProgress(progress: number): UpdateProgress {
+        return {
+            type: "update_progress",
+            progress: progress,
+        }
+    }
+
     export interface ThreadChecked {
         type: "thread_checked";
         threadId: number;
@@ -41,18 +53,18 @@ export module Actions {
     }
 
     // Jane Street OCaml convention...
-    export type t = WorkerCreated | WorkerAction | ThreadChecked
+    export type t = WorkerCreated | WorkerAction | UpdateProgress | ThreadChecked
 }
 
 function reduceWorker(state : State, action: WorkerActions.t): State {
     // TODO: Object spread operator?
     switch (action.type) {
-        case "threads": 
+        case "threads":
             return Object.assign({}, state, {
                 threads: action.threads,
                 timeToParseInMs: action.parsingTimeInMs
             });
-        case "ready_for_next_chunk": 
+        case "ready_for_next_chunk":
             return state;
         case "got_misc_info":
             return Object.assign({}, state, {
@@ -90,7 +102,12 @@ export function reduce(state : State = defaultState, action: Actions.t): State {
             return reduceWorker(state, action.action);
         case "worker_created":
             return Object.assign({}, state, {
-                worker: action.worker
+                worker: action.worker,
+                parsingProgress: 0
+            });
+        case "update_progress":
+            return Object.assign({}, state, {
+                parsingProgress: action.progress
             });
         case "thread_checked":
             let newSelected;

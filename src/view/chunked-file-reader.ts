@@ -1,12 +1,15 @@
 import { WorkerCommands } from '../analysis/worker-commands'
 
+import { Actions } from '../actions'
+
 export default class ChunkedFileReader {
-    static CHUNK_SIZE = 10 * 1024 * 1024; // 10 mb chunks
+    static CHUNK_SIZE = 2 * 1024 * 1024; // 2 mb chunks
 
     private currentOffset: number;
 
     constructor(private file,
-                private worker) {
+                private worker,
+                private dispatch) {
     }
 
     private readChunk() {
@@ -15,11 +18,11 @@ export default class ChunkedFileReader {
 
             reader.onload = e => {
                 resolve(reader.result);
-            };
+            }
 
-            console.log("Reading chunk: " + this.currentOffset / ChunkedFileReader.CHUNK_SIZE);
+            // console.log("Reading chunk: " + this.currentOffset / ChunkedFileReader.CHUNK_SIZE);
             const slice = this.file.slice(
-                this.currentOffset, 
+                this.currentOffset,
                 this.currentOffset + ChunkedFileReader.CHUNK_SIZE
             );
             reader.readAsText(slice);
@@ -27,6 +30,9 @@ export default class ChunkedFileReader {
         .then((result: any) => {
             const isLast = this.currentOffset + ChunkedFileReader.CHUNK_SIZE >= this.file.size;
             this.worker.postMessage(WorkerCommands.parseChunk(result, isLast));
+            const progress = Math.min(1.0,
+                (this.currentOffset + ChunkedFileReader.CHUNK_SIZE) / this.file.size);
+            this.dispatch(Actions.updateProgress(progress));
         });
     }
 

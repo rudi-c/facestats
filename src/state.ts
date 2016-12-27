@@ -4,7 +4,9 @@ import * as Data from './analysis/data'
 
 export class State {
     threads: Data.ThreadInfo[]
+    parsingProgress: number
     timeToParseInMs: number
+
     msgCountByDate: [Date, number][]
     miscInfo: Data.MiscInfo
     punchcard: number[][]
@@ -17,15 +19,19 @@ export class State {
     worker: any;
 
     constructor() {
-        this.threads = [];
+        this.threads = null;
+        this.parsingProgress = 0;
         this.timeToParseInMs = null;
+
         this.msgCountByDate = null;
         this.miscInfo = null;
         this.punchcard = null;
         this.maxMessagesInDay = 10;
+
         this.selectedThreadIds = Immutable.Set<number>();
         this.threadDetails = Immutable.Map<number, Data.ThreadDetails>();
         this.wordcloudWords = Immutable.Map<number, string[]>();
+
         this.worker = null;
     }
 }
