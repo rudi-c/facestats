@@ -2,6 +2,8 @@ import * as parse5 from 'parse5';
 import * as d3 from 'd3-time-format';
 import * as _ from 'underscore';
 
+const htmlparser2 = require("../../lib/htmlparser2")
+
 import { WorkerActions } from '../analysis/worker-actions'
 import { sendUpdate } from './helpers'
 
@@ -18,7 +20,7 @@ export class Message {
 export class MessageThread {
     // The id is our internal identifier for a message thread.
     constructor(public id: number,
-                public parties: string[], 
+                public parties: string[],
                 public messages: Message[]) {
         this.parties = parties.sort();
         this.messages = _.sortBy(messages, message => message.time.getTime());
@@ -31,124 +33,203 @@ export class ParseResults {
     }
 }
 
-class DomNode {
-    ast: ASTElement;
-
-    constructor(ast: ASTElement) {
-        this.ast = ast;
-    }
-
-    hasClass(node: ASTElement, cls: string) {
-        return node.attrs && node.attrs.findIndex(attr => 
-            attr.name === "class" && attr.value === cls
-        ) >= 0;
-    }
-
-    getFirstByTag(tag: string): DomNode {
-        let result = this.ast.childNodes.find(child => child.nodeName === tag);
-        if (result) {
-            return new DomNode(result as ASTElement);
-        } else {
-            return undefined;
-        }
-    }
-
-    getFirstByClass(cls: string): DomNode {
-        let result = this.ast.childNodes.find(child => 
-            this.hasClass(child as ASTElement, cls)
-        );
-        if (result) {
-            return new DomNode(result as ASTElement);
-        } else {
-            return undefined;
-        }
-    }
-
-    getAllByTag(tag: string): DomNode[] {
-        return this.ast.childNodes
-            .filter(child => child.nodeName === tag)
-            .map(ast => new DomNode(ast as ASTElement));
-    }
-
-    getAllByClass(cls: string): DomNode[] {
-        return this.ast.childNodes
-            .filter(child => this.hasClass(child as ASTElement, cls))
-            .map(ast => new DomNode(ast as ASTElement));
-    }
-
-    text(): string {
-        let text_fragments =
-            this.ast.childNodes
-                .filter(child => child.nodeName === "#text")
-                .map(child => (child as TextNode).value.trim())
-                .filter(fragment => fragment.length > 0);
-        return text_fragments.join("\n");
-    }
-
-    body(): DomNode {
-        return this.getFirstByTag("body");
-    }
-
-    h1(): DomNode {
-        return this.getFirstByTag("h1");
-    }
-
-    div(): DomNode {
-        return this.getFirstByTag("div");
-    }
-}
-
 let _parseTime = d3.timeParse("%A, %B %d, %Y at %I:%M%p %Z");
 function parseTime(raw: string): Date {
     // The %Z format specified of d3-time-format doesn't understand PST and PDT.
     const time = _parseTime(raw.replace("PDT", "-07").replace("PST", "-08"));
     if (!time) {
-        // TODO: Maybe not print an error every time.
         console.error("Could not parse: " + raw);
+        // TODO: Proper error handling
+        throw "";
     }
     return time;
 }
 
-function readMessage(info: DomNode, text: string): Message {
-    let author = info.getFirstByClass("user").text();
-    let time = parseTime(info.getFirstByClass("meta").text());
-    return new Message(author, time, text);
-}
+class Handler {
+    tagClass?: string
+    childHandlers?: Handler[]
+    onFinish: (children: any[]) => any
 
-function readMessageThread(node: DomNode, id: number): MessageThread {
-    // TODO: Edge case: What if people have a comma in their names?
-    let people = node.text().split(",").map(name => name.trim());
-    let messageInfos =
-        node.getAllByClass("message")
-            .map(node => node.getFirstByClass("message_header"));
-    let messageTexts = node.getAllByTag("p").map(node => node.text());
-
-    if (messageInfos.length != messageTexts.length) {
-        console.error("Number of message infos not the same as messages");
+    constructor(public tagName: string) {
+        this.onFinish = children => children;
     }
 
-    let messages = _.zip(messageInfos, messageTexts)
-                    .map(pair => readMessage(pair[0], pair[1]));
-    return new MessageThread(id, people, messages);
+    withClass(tagClass: string) {
+        this.tagClass = tagClass;
+        return this;
+    }
+
+    withChildHandlers(childHandlers: Handler[]) {
+        this.childHandlers = childHandlers;
+        return this;
+    }
+
+    withOnFinish(onFinish) {
+        this.onFinish = onFinish;
+        return this;
+    }
+
+    matches(name, attribs) {
+        return this.tagName === name && (!this.tagClass || this.tagClass === attribs.class);
+    }
 }
 
-function parseRaw(raw: string): DomNode {
-    let start = new Date().getTime();
-    let document = parse5.parse(raw) as parse5.AST.Default.Document;
-    let end = new Date().getTime();
-    sendUpdate(WorkerActions.progressParsed(end - start));
-    return new DomNode(document.childNodes[0] as ASTElement);
+class IgnoreHandler extends Handler {
+    constructor() {
+        super("");
+        this.childHandlers = [this];
+        this.onFinish = _ => undefined;
+    }
+
+    matches(name, attribs) {
+        return true;
+    }
 }
+
+function firstChild(children) {
+    const [child] = children;
+    return child;
+}
+
+const messageTextHandler = new Handler("p").withOnFinish(firstChild);
+
+const userHandler = new Handler("span").withClass("user").withOnFinish(firstChild);
+
+const dateHandler = new Handler("span").withClass("meta").withOnFinish(firstChild);
+
+const messageMetadataHandler = new Handler("div")
+    .withClass("message")
+    .withChildHandlers([
+        new Handler("div")
+            .withClass("message_header")
+            .withChildHandlers([userHandler, dateHandler])
+            .withOnFinish(children => {
+                const [user, timeString] = children;
+                return {
+                    author: user,
+                    time: parseTime(timeString),
+                };
+            })
+    ])
+    .withOnFinish(firstChild);
+
+const threadHandler = new Handler("div")
+    .withClass("thread")
+    .withChildHandlers([messageMetadataHandler, messageTextHandler])
+    .withOnFinish(children => {
+        const threadName = children[0];
+        // TODO: Edge case: What if people have a comma in their names?
+        const parties = threadName.split(",").map(name => name.trim());
+
+        const messages = [];
+        for (let i = 1; i < children.length; i += 2) {
+            const meta = children[i];
+            if (!meta.author || !meta.time) {
+                console.error("Missing attributes author and/or time");
+                console.error(meta);
+                console.error(i);
+                // TODO: Proper error handling
+                throw "";
+            }
+            messages.push(new Message(meta.author, meta.time, children[i + 1]));
+        }
+
+        return {
+            parties,
+            messages
+        };
+    })
+
+const contentsDivHandler = new Handler("div").withChildHandlers([threadHandler]);
+
+const nameH1Handler = new Handler("h1")
+    .withChildHandlers([threadHandler])
+    .withOnFinish(firstChild);
+
+const contentsHandler = new Handler("div")
+    .withClass("contents")
+    .withChildHandlers([nameH1Handler, contentsDivHandler])
+    .withOnFinish(children => {
+        const name = children[0];
+        const threadGroups = children.slice(1);
+        const threads = _.flatten(threadGroups).map((thread, i) =>
+            new MessageThread(i, thread.parties, thread.messages)
+        );
+        return new ParseResults(threads, name);
+    })
+
+const bodyHandler = new Handler("body")
+    .withChildHandlers([contentsHandler, new IgnoreHandler()])
+    .withOnFinish(firstChild);
+
+const htmlHandler = new Handler("html")
+    .withChildHandlers([bodyHandler, new IgnoreHandler()])
+    .withOnFinish(firstChild);
+
+const rootHandler = new Handler("")
+    .withChildHandlers([htmlHandler])
+    .withOnFinish(firstChild);
 
 export function parseThreads(data: string): ParseResults {
-    let dom = parseRaw(data);
-    let contents = dom.body().getFirstByClass("contents");
-    let name = contents.h1().text();
+    let handlerStack: Handler[] = [rootHandler];
+    let childrenStack: any[][] = [[]];
+    let lastAddedTextChild = false;
 
-    // Not sure what critera determines how <div class="thread"> are grouped
-    // into unlabelled <div>s, but it happens.
-    let threads_groups = contents.getAllByTag("div")
-                                 .map(group => group.getAllByClass("thread"));
-    let threads = [].concat.apply([], threads_groups).map(readMessageThread);
-    return new ParseResults(threads, name);
+    let start = new Date().getTime();
+    const parser = new htmlparser2.Parser({
+        onopentag: (name, attribs) => {
+            for (let handler of _.last(handlerStack).childHandlers) {
+                if (handler.matches(name, attribs)) {
+                    handlerStack.push(handler);
+                    childrenStack.push([]);
+                    lastAddedTextChild = false;
+                    return;
+                }
+            }
+            console.error("No matching handler found!");
+            console.error(name);
+            console.error(attribs);
+            // TODO: Proper error handling
+            throw "";
+        },
+        ontext: text => {
+            const children = _.last(childrenStack);
+            // Sometimes text gets broken up into multiple text events. For example,
+            // when special characters like @ get represented as &#064;
+            // TODO: Fix O(n^2) behavior here if this code gets shared (we won't run
+            // into this kind of input in practice in this application).
+            if (lastAddedTextChild) {
+                children[children.length - 1] += text;
+            } else {
+                children.push(text);
+            }
+            lastAddedTextChild = true;
+        },
+        onclosetag: name => {
+            const handler = _.last(handlerStack);
+            const children = _.last(childrenStack);
+            let result;
+            if (children.length === 0) {
+                // Something like <p></p> doesn't trigger the onText event,
+                // but in most cases we probably still want to interpret that
+                // as the empty string.
+                result = handler.onFinish([""]);
+            } else {
+                result = handler.onFinish(children);
+            }
+            handlerStack.pop();
+            childrenStack.pop();
+            lastAddedTextChild = false;
+            if (result !== undefined) {
+                _.last(childrenStack).push(result);
+            }
+        },
+    }, { decodeEntities: true });
+    parser.write(data);
+    parser.end();
+    let end = new Date().getTime();
+    sendUpdate(WorkerActions.progressParsed(end - start));
+
+    const [[result]] = childrenStack;
+    return result;
 }

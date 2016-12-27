@@ -23,7 +23,8 @@ module.exports = {
   module: {
     loaders: [
       { test: /\.css$/, loader: "style-loader!css-loader" },
-      { test: /\.tsx?$/, loaders: ['babel', 'ts-loader'] }
+      { test: /\.tsx?$/, loaders: ['babel', 'ts-loader'] },
+      { test: /\.json$/, include: /node_modules/, loader: 'json-loader' },
     ]
   },
   plugins: [

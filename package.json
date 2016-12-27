@@ -43,6 +43,7 @@
     "d3": "^4.4.0",
     "d3-cloud": "^1.2.1",
     "immutable": "^3.8.1",
+    "json-loader": "^0.5.4",
     "parse5": "git+https://github.com/inikulin/parse5.git",
     "react": "^15.3.2",
     "react-addons-transition-group": "^15.4.1",
