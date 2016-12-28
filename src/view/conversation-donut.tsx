@@ -23,6 +23,8 @@ interface Props {
 // http://bl.ocks.org/dbuezas/9306799
 // https://www.sitepoint.com/how-react-makes-your-d3-better/
 class AnimatedDonut extends React.Component<any, any> {
+    props: { proportions: [string, number][] }
+
     constructor(props) {
         super(props);
     }
