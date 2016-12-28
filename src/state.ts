@@ -2,6 +2,8 @@ import * as Immutable from 'immutable'
 
 import * as Data from './analysis/data'
 
+export type Views = "load_file" | "loading" | "summary" | "navigator"
+
 export class State {
     threads: Data.ThreadInfo[]
     parsingProgress: number
@@ -16,7 +18,9 @@ export class State {
     threadDetails: Immutable.Map<number, Data.ThreadDetails>
     wordcloudWords: Immutable.Map<number, string[]>
 
-    worker: any;
+    worker: any
+
+    view: Views
 
     constructor() {
         this.threads = null;
@@ -33,6 +37,7 @@ export class State {
         this.wordcloudWords = Immutable.Map<number, string[]>();
 
         this.worker = null;
+        this.view = "load_file";
     }
 }
 

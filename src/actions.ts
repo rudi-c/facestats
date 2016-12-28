@@ -28,6 +28,16 @@ export module Actions {
         }
     }
 
+    export interface MoveToNavigator {
+        type: "move_to_navigator";
+    }
+
+    export function moveToNavigator(): MoveToNavigator {
+        return {
+            type: "move_to_navigator",
+        }
+    }
+
     export interface UpdateProgress {
         type: "update_progress";
         progress: number,
@@ -53,7 +63,12 @@ export module Actions {
     }
 
     // Jane Street OCaml convention...
-    export type t = WorkerCreated | WorkerAction | UpdateProgress | ThreadChecked
+    export type t =
+          WorkerCreated
+        | WorkerAction
+        | MoveToNavigator
+        | UpdateProgress
+        | ThreadChecked
 }
 
 function reduceWorker(state : State, action: WorkerActions.t): State {
@@ -62,7 +77,8 @@ function reduceWorker(state : State, action: WorkerActions.t): State {
         case "threads":
             return Object.assign({}, state, {
                 threads: action.threads,
-                timeToParseInMs: action.parsingTimeInMs
+                timeToParseInMs: action.parsingTimeInMs,
+                view: "summary",
             });
         case "ready_for_next_chunk":
             return state;
@@ -103,7 +119,12 @@ export function reduce(state : State = defaultState, action: Actions.t): State {
         case "worker_created":
             return Object.assign({}, state, {
                 worker: action.worker,
-                parsingProgress: 0
+                parsingProgress: 0,
+                view: "loading",
+            });
+        case "move_to_navigator":
+            return Object.assign({}, state, {
+                view: "navigator",
             });
         case "update_progress":
             return Object.assign({}, state, {

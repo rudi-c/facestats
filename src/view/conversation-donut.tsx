@@ -178,7 +178,7 @@ const RenderConversationDonut = function({ miscInfo }): JSX.Element {
 
     return (
         <div className="donut">
-            <button className="randomize">randomize</button> 
+            <button className="randomize hide">randomize</button> 
             <ReactTransitionGroup component="svg">
                 <AnimatedDonut proportions={miscInfo.messageProportions} />
             </ReactTransitionGroup>

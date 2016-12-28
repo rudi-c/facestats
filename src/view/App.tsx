@@ -5,22 +5,19 @@ import { StyleSheet, css } from 'aphrodite';
 import Progress from 'react-progressbar'
 
 import { Actions } from '../actions'
-import { State } from '../state'
+import { State, Views } from '../state'
 import { WorkerActions } from '../analysis/worker-actions'
 import { WorkerCommands } from '../analysis/worker-commands'
 
 import ChunkedFileReader from './chunked-file-reader'
 import FileInput from './file-input'
-import ConversationDonut from './conversation-donut'
-import MessageCountTimeline from './message-count-timeline'
-import Punchcard from './punchcard'
-import Threads from './threads-list'
+import Navigator from './navigator'
+import Summary from './summary'
 
 const Analyzer = require("worker!../analysis/analyzer.ts")
 
 interface StateProps {
-    isLoadingFile: boolean
-    hasLoadedFile: boolean
+    view: Views
     parsingProgress: number
 }
 
@@ -56,41 +53,39 @@ function onWorkerMessage(dispatch, worker, fileReader) {
 const styles = StyleSheet.create({
     inputForm: {
         width: '300px'
+    },
+    loadingBar: {
+        width: '300px'
     }
 });
 
-const RenderApp = function({ isLoadingFile,
-                             hasLoadedFile,
+const RenderApp = function({ view,
                              parsingProgress,
                              onFileChange }: AppProps) {
-    if (hasLoadedFile) {
-        return (
-            <div>
-                <ConversationDonut />
-                <MessageCountTimeline />
-                <Punchcard />
-                <Threads />
-            </div>
-        );
-    } else if (isLoadingFile) {
-        return (
-            <div className={"container " + css(styles.inputForm)}>
-                <Progress completed={Math.floor(parsingProgress * 100)} />
-            </div>
-        )
-    } else {
-        return (
-            <div className={"container " + css(styles.inputForm)}>
-                <FileInput onFileChange={onFileChange} />
-            </div>
-        );
+    switch (view) {
+        case "load_file":
+            return (
+                <div className={"container " + css(styles.inputForm)}>
+                    <FileInput onFileChange={onFileChange} />
+                </div>
+            );
+        case "loading":
+            return (
+                <div className={"container " + css(styles.loadingBar)}>
+                    <Progress completed={Math.floor(parsingProgress * 100)} />
+                </div>
+            )
+        case "summary":
+            return (<Summary />);
+        case "navigator":
+            return (<Navigator />);
+        default: const _exhaustiveCheck: never = view;
     }
 }
 
 const mapStateToProps = function(state : State): StateProps {
     return {
-        isLoadingFile: state.worker !== null,
-        hasLoadedFile: state.threads !== null,
+        view: state.view,
         parsingProgress: state.parsingProgress
     };
 }
