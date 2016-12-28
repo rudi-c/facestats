@@ -1,4 +1,5 @@
 import * as _ from 'underscore';
+import * as Immutable from 'immutable'
 
 import { State, defaultState } from "./state"
 import { WorkerActions } from "./analysis/worker-actions"
@@ -17,7 +18,7 @@ export module Actions {
     }
 
     export interface WorkerAction {
-        type: "worker_action";
+        type: "worker_action"
         action: WorkerActions.t
     }
 
@@ -29,7 +30,7 @@ export module Actions {
     }
 
     export interface MoveToNavigator {
-        type: "move_to_navigator";
+        type: "move_to_navigator"
     }
 
     export function moveToNavigator(): MoveToNavigator {
@@ -39,8 +40,8 @@ export module Actions {
     }
 
     export interface UpdateProgress {
-        type: "update_progress";
-        progress: number,
+        type: "update_progress"
+        progress: number
     }
 
     export function updateProgress(progress: number): UpdateProgress {
@@ -50,15 +51,17 @@ export module Actions {
         }
     }
 
-    export interface ThreadChecked {
-        type: "thread_checked";
-        threadId: number;
+    export interface ThreadClicked {
+        type: "thread_clicked"
+        threadId: number
+        additive: boolean
     }
 
-    export function threadChecked(threadId: number): ThreadChecked {
+    export function threadClicked(threadId: number, additive: boolean): ThreadClicked {
         return {
-            type: "thread_checked",
+            type: "thread_clicked",
             threadId: threadId,
+            additive: additive
         }
     }
 
@@ -68,7 +71,7 @@ export module Actions {
         | WorkerAction
         | MoveToNavigator
         | UpdateProgress
-        | ThreadChecked
+        | ThreadClicked
 }
 
 function reduceWorker(state : State, action: WorkerActions.t): State {
@@ -130,12 +133,16 @@ export function reduce(state : State = defaultState, action: Actions.t): State {
             return Object.assign({}, state, {
                 parsingProgress: action.progress
             });
-        case "thread_checked":
+        case "thread_clicked":
             let newSelected;
-            if (state.selectedThreadIds.has(action.threadId)) {
-                newSelected = state.selectedThreadIds.remove(action.threadId);
+            if (action.additive) {
+                if (state.selectedThreadIds.has(action.threadId)) {
+                    newSelected = state.selectedThreadIds.remove(action.threadId);
+                } else {
+                    newSelected = state.selectedThreadIds.add(action.threadId);
+                }
             } else {
-                newSelected = state.selectedThreadIds.add(action.threadId);
+                newSelected = Immutable.Set.of(action.threadId);
             }
             return Object.assign({}, state, {
                 selectedThreadIds: newSelected

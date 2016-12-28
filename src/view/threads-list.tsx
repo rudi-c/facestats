@@ -4,88 +4,70 @@ import WordCloud from 'react-d3-cloud';
 
 import * as Immutable from 'immutable'
 
-import * as Data from '../analysis/data'
-
 import { State } from '../state'
 import { ThreadInfo } from '../analysis/data'
 
 import { Actions } from '../actions'
 import { WorkerCommands } from '../analysis/worker-commands'
+import { fbEmailRegex } from '../analysis/helpers'
 
 interface StateProps {
-    threads: ThreadInfo[],
-    threadDetails: Immutable.Map<number, Data.ThreadDetails>
-    wordcloudWords: Immutable.Map<number, string[]>
-    onSelectedWorker: (number) => any
-    onChooseThread: (number) => any
+    threads: ThreadInfo[]
+    selectedThreadIds: Immutable.Set<number>
+    yourName: string
+    onClickThread: (number, boolean) => any
 }
 
 interface DispatchProps {
-    onSelected: (number) => any
+    onClickThreadDispatch: (number, boolean) => any
 }
 
 interface ThreadsProps extends StateProps, DispatchProps {
 }
 
-const RenderThreads = function(
-  { threads, threadDetails, wordcloudWords, onSelected, onSelectedWorker, onChooseThread }: ThreadsProps
-  ): JSX.Element {
-
+const RenderThreads = function({
+    threads,
+    selectedThreadIds,
+    yourName,
+    onClickThread,
+    onClickThreadDispatch
+}: ThreadsProps): JSX.Element {
     const threadsList = threads.map(thread =>  {
-        let detailsView = null;
-        if (threadDetails.has(thread.id)) {
-            const details = threadDetails.get(thread.id);
+        const onItemClick = (event : React.MouseEvent<HTMLButtonElement>) => {
+            const additive = event.ctrlKey || event.shiftKey;
+            onClickThread(thread.id, additive);
+            onClickThreadDispatch(thread.id, additive);
+        };
+        const otherKnownParties = thread.parties.filter(name => name != yourName && !name.match(fbEmailRegex));
+        const unknownParties = thread.parties.filter(name => name.match(fbEmailRegex));
+        // Always show the first two known names
+        let displayLines = otherKnownParties.slice(0, 2);
+        if (otherKnownParties.length == 3 && unknownParties.length == 0) {
+            displayLines.push(otherKnownParties[2]);
+        } else if (otherKnownParties.length >= 3) {
+            displayLines.push((otherKnownParties.length - 2 + unknownParties.length) + " others");
+        } else if (unknownParties.length > 0) {
+            displayLines.push(unknownParties.length + " <unknown>");
+        }
+        const displayItems = displayLines.map((line, i) => (<div key={i}>{line}</div>));
 
-            // let wordcloud = null;
-            // if (wordcloudWords.has(thread.id)) {
-            //     wordcloud = (
-            //         <WordCloud data={wordcloudWords.get(thread.id)} />
-            //     );
-            // }
-
-            detailsView = (
-                <div>
-                  <div>
-                    Messages written by:
-                    { details.messageCount.map((info, id) => {
-                        const [author, count] = info;
-                        return (<p key={id}>{author}: {count}</p>);
-                      })
-                    }
-                  </div>
-                  <div>
-                    Conversations started by:
-                    { details.conversationStartCount.map((info, id) => {
-                        const [author, count] = info;
-                        return (<p key={id}>{author}: {count}</p>);
-                      })
-                    }
-                  </div>
-                  <div>
-                    Conversations ended by:
-                    { details.conversationEndCount.map((info, id) => {
-                        const [author, count] = info;
-                        return (<p key={id}>{author}: {count}</p>);
-                      })
-                    }
-                  </div>
-                </div>
-            );
+        let className = "list-group-item";
+        if (selectedThreadIds.has(thread.id)) {
+            className += " active";
         }
         return (
-          <div key={thread.id}>
-            <input type="checkbox" defaultChecked={false} onChange={(event) => 
-                { onSelected(thread.id); onSelectedWorker(thread.id) }
-            }/>
-            <span onClick={onChooseThread(thread.id)}>
-            { thread.parties.join(", ") + " (" + thread.length + ")" }
-            </span>
-            { detailsView }
-          </div>
+            <button key={thread.id}
+                    type="button"
+                    className={className}
+                    onClick={onItemClick}
+            >
+                <span className="badge">{ thread.length }</span>
+                { displayItems }
+            </button>
         );
     });
     return (
-        <div>
+        <div className="list-group">
             {threadsList}
         </div>
     );
@@ -94,24 +76,26 @@ const RenderThreads = function(
 const mapStateToProps = function(state : State): StateProps {
     return {
         threads: state.threads,
-        threadDetails: state.threadDetails,
-        wordcloudWords: state.wordcloudWords,
-        onChooseThread: (threadId) => ((event) => {
+        selectedThreadIds: state.selectedThreadIds,
+        yourName: state.miscInfo.yourName,
+        onClickThread: (threadId, additive) => {
+            let newSelected: number[];
+            if (additive) {
+                if (state.selectedThreadIds.has(threadId)) {
+                    newSelected = state.selectedThreadIds.remove(threadId).toArray();
+                } else {
+                    newSelected = state.selectedThreadIds.add(threadId).toArray();
+                }
+            } else {
+                newSelected = [threadId];
+            }
             state.worker.postMessage(WorkerCommands.getThreadDetails(threadId));
             state.worker.postMessage(WorkerCommands.getWordcloud(threadId));
-        }),
-        onSelectedWorker: (threadId) => {
-            let newSelected: Immutable.Set<number>;
-            if (state.selectedThreadIds.has(threadId)) {
-                newSelected = state.selectedThreadIds.remove(threadId);
-            } else {
-                newSelected = state.selectedThreadIds.add(threadId);
-            }
             state.worker.postMessage(
-                WorkerCommands.getMessageCountByDay(newSelected.toArray(), true, 7)
+                WorkerCommands.getMessageCountByDay(newSelected, true, 7)
             );
             state.worker.postMessage(
-                WorkerCommands.getPunchcard(newSelected.toArray())
+                WorkerCommands.getPunchcard(newSelected)
             );
         },
     }
@@ -119,8 +103,8 @@ const mapStateToProps = function(state : State): StateProps {
 
 const mapDispatchToProps = function(dispatch): DispatchProps {
     return {
-        onSelected: (threadId) => {
-            dispatch(Actions.threadChecked(threadId));
+        onClickThreadDispatch: (threadId, additive) => {
+            dispatch(Actions.threadClicked(threadId, additive));
         },
     }
 }
