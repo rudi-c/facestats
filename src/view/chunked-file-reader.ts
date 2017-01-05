@@ -29,7 +29,7 @@ export default class ChunkedFileReader {
         })
         .then((result: any) => {
             const isLast = this.currentOffset + ChunkedFileReader.CHUNK_SIZE >= this.file.size;
-            this.worker.postMessage(WorkerCommands.parseChunk(result, isLast));
+            this.worker.postMessage(new WorkerCommands.ParseChunk(result, isLast));
             const progress = Math.min(1.0,
                 (this.currentOffset + ChunkedFileReader.CHUNK_SIZE) / this.file.size);
             this.dispatch(Actions.updateProgress(progress));

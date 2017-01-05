@@ -309,11 +309,11 @@ function parseChunk(chunk, isLastChunk) {
 
         const endTime = new Date().getTime();
         const parseTime = endTime - state.parser.parseStartTime;
-        sendUpdate(WorkerActions.threads(sortedThreadInfos, parseTime));
+        sendUpdate(new WorkerActions.Threads(sortedThreadInfos, parseTime));
 
         state.parser = null;
     } else {
-        sendUpdate(WorkerActions.readyForNextChunk());
+        sendUpdate(new WorkerActions.ReadyForNextChunk());
     }
 }
 
@@ -330,7 +330,7 @@ onmessage = function(message: MessageEvent) {
             break;
         case "get_misc_info":
             const proportions = getMessageProportions();
-            sendUpdate(WorkerActions.gotMiscInfo(
+            sendUpdate(new WorkerActions.GotMiscInfo(
                 new Data.MiscInfo(state.yourName, proportions))
             );
             break;
@@ -340,11 +340,11 @@ onmessage = function(message: MessageEvent) {
                 command.includeAllMessages,
                 command.blurRadius
             );
-            sendUpdate(WorkerActions.gotMessageCountByDay(counts));
+            sendUpdate(new WorkerActions.GotMessageCountByDay(counts));
             break;
         case "get_punchcard":
             const punchcard = getPunchcard(command.threadIds);
-            sendUpdate(WorkerActions.gotPunchcard(punchcard));
+            sendUpdate(new WorkerActions.GotPunchcard(punchcard));
             break;
         case "get_thread_details":
             const id = command.threadId;
@@ -354,11 +354,11 @@ onmessage = function(message: MessageEvent) {
             }
 
             const threadDetails = state.threadDetails.get(id);
-            sendUpdate(WorkerActions.gotThreadDetails(id, threadDetails));
+            sendUpdate(new WorkerActions.GotThreadDetails(id, threadDetails));
             break;
         case "get_wordcloud":
             const words = getWordcloudWords(command.threadId);
-            sendUpdate(WorkerActions.gotWordcloud(command.threadId, words));
+            sendUpdate(new WorkerActions.GotWordcloud(command.threadId, words));
             break;
         default: const _exhaustiveCheck: never = command;
     }

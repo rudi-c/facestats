@@ -1,92 +1,64 @@
 import * as Data from './data'
 
 export module WorkerActions {
-    export interface Threads {
-        type: "threads";
-        threads: Data.ThreadInfo[];
-        parsingTimeInMs: number
-    }
-
-    export function threads(threads: Data.ThreadInfo[], time: number): Threads {
-        return {
-            type: "threads",
-            threads: threads,
-            parsingTimeInMs: time
+    export class Threads {
+        type: "threads"
+        constructor(public threads: Data.ThreadInfo[],
+                    public parsingTimeInMs: number) {
+            this.type = "threads";
         }
     }
 
-    export interface ReadyForNextChunk {
-        type: "ready_for_next_chunk";
-    }
-
-    export function readyForNextChunk(): ReadyForNextChunk {
-        return { type: "ready_for_next_chunk" };
-    }
-
-    export interface GotMiscInfo {
-        type: "got_misc_info";
-        info: Data.MiscInfo;
-    }
-
-    export function gotMiscInfo(info: Data.MiscInfo): GotMiscInfo {
-        return {
-            type: "got_misc_info",
-            info: info
+    export class ReadyForNextChunk {
+        type: "ready_for_next_chunk"
+        constructor() {
+            this.type = "ready_for_next_chunk";
         }
     }
 
-    export interface GotMessageCountByDay {
-        type: "got_message_count_by_day";
-        value: [Date, number][];
-    }
-
-    export function gotMessageCountByDay(value: [Date, number][]): GotMessageCountByDay {
-        return {
-            type: "got_message_count_by_day",
-            value: value
+    export class GotMiscInfo {
+        type: "got_misc_info"
+        constructor(public info: Data.MiscInfo) {
+            this.type = "got_misc_info";
         }
     }
 
-    export interface GotPunchcard {
-        type: "got_punchcard";
+    export class GotMessageCountByDay {
+        type: "got_message_count_by_day"
+        constructor(public value: [Date, number][]) {
+            this.type = "got_message_count_by_day";
+        }
+    }
+
+    export class GotPunchcard {
+        type: "got_punchcard"
         // array of (array of counts by hour) by day of week
-        value: number[][];
-    }
-
-    export function gotPunchcard(value: number[][]): GotPunchcard {
-        return {
-            type: "got_punchcard",
-            value: value
+        constructor (public value: number[][]) {
+            this.type = "got_punchcard";
         }
     }
 
-    export interface GotThreadDetails {
-        type: "got_thread_details";
-        threadId: number;
-        details: Data.ThreadDetails;
-    }
-
-    export function gotThreadDetails(threadId: number,
-                                     details: Data.ThreadDetails): GotThreadDetails {
-        return {
-            type: "got_thread_details",
-            threadId: threadId,
-            details: details,
+    export class GotThreadDetails {
+        type: "got_thread_details"
+        constructor(public threadId: number,
+                    public details: Data.ThreadDetails) {
+            this.type = "got_thread_details";
         }
     }
 
-    export interface GotWordcloud {
-        type: "got_wordcloud";
-        threadId: number;
-        words: string[]
+    export class GotWordcloud {
+        type: "got_wordcloud"
+        constructor(public threadId: number,
+                    public words: string[]) {
+            this.type = "got_wordcloud";
+        }
     }
 
-    export function gotWordcloud(threadId: number,
-                                 words: string[]): GotWordcloud {
-        return {
-            type: "got_wordcloud",
-            threadId: threadId,
-            words: words,
+    export class GotConversationStarts {
+        type: "got_conversation_starts"
+        constructor(public threadId: number,
+                    public starts: Map<string, [Date, number][]>) {
+            this.type = "got_conversation_starts";
         }
     }
 
@@ -99,4 +71,5 @@ export module WorkerActions {
         | GotPunchcard
         | GotThreadDetails
         | GotWordcloud
+        | GotConversationStarts
 }

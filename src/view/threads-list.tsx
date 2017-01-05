@@ -89,13 +89,13 @@ const mapStateToProps = function(state : State): StateProps {
             } else {
                 newSelected = [threadId];
             }
-            state.worker.postMessage(WorkerCommands.getThreadDetails(threadId));
-            state.worker.postMessage(WorkerCommands.getWordcloud(threadId));
+            state.worker.postMessage(new WorkerCommands.GetThreadDetails(threadId));
+            state.worker.postMessage(new WorkerCommands.GetWordcloud(threadId));
             state.worker.postMessage(
-                WorkerCommands.getMessageCountByDay(newSelected, true, 7)
+                new WorkerCommands.GetMessageCountByDay(newSelected, true, 7)
             );
             state.worker.postMessage(
-                WorkerCommands.getPunchcard(newSelected)
+                new WorkerCommands.GetPunchcard(newSelected)
             );
         },
     }

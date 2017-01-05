@@ -40,9 +40,9 @@ function onWorkerMessage(dispatch, worker, fileReader) {
                 break;
             // When the parsing is done.
             case "threads":
-                worker.postMessage(WorkerCommands.getMiscInfo());
-                worker.postMessage(WorkerCommands.getMessageCountByDay(null));
-                worker.postMessage(WorkerCommands.getPunchcard(null));
+                worker.postMessage(new WorkerCommands.GetMiscInfo());
+                worker.postMessage(new WorkerCommands.GetMessageCountByDay(null));
+                worker.postMessage(new WorkerCommands.GetPunchcard(null));
                 break;
         }
 
