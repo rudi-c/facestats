@@ -10,6 +10,7 @@ import { Actions } from '../actions'
 import { State } from '../state'
 
 import ConversationDonut from './conversation-donut'
+import ConversationsTimeline from './conversations-timeline'
 import MessageCountTimeline from './message-count-timeline'
 import Punchcard from './punchcard'
 import Threads from './threads-list'
@@ -79,6 +80,7 @@ const RenderNavigator = function({ threadDetails, wordcloudWords }: AppProps) {
                 { detailsView }
                 <MessageCountTimeline />
                 <Punchcard />
+                <ConversationsTimeline />
             </div>
         </div>
     );

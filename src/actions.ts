@@ -111,6 +111,10 @@ function reduceWorker(state : State, action: WorkerActions.t): State {
                     action.threadId, action.words
                 )
             });
+        case "got_conversation_starts":
+            return Object.assign({}, state, {
+                conversationStarts: action.starts
+            });
         default: const _exhaustiveCheck: never = action;
     }
 }

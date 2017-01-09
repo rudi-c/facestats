@@ -12,6 +12,7 @@ export class State {
     msgCountByDate: [Date, number][]
     miscInfo: Data.MiscInfo
     punchcard: number[][]
+    conversationStarts: Map<string, [Date, number][]>
     maxMessagesInDay: number
 
     selectedThreadIds: Immutable.Set<number>
@@ -30,6 +31,7 @@ export class State {
         this.msgCountByDate = null;
         this.miscInfo = null;
         this.punchcard = null;
+        this.conversationStarts = null;
         this.maxMessagesInDay = 10;
 
         this.selectedThreadIds = Immutable.Set<number>();

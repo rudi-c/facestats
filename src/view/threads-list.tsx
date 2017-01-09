@@ -97,6 +97,9 @@ const mapStateToProps = function(state : State): StateProps {
             state.worker.postMessage(
                 new WorkerCommands.GetPunchcard(newSelected)
             );
+            state.worker.postMessage(
+                new WorkerCommands.GetConversationStarts(threadId)
+            );
         },
     }
 }

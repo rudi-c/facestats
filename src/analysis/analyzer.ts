@@ -248,6 +248,43 @@ function getWordcloudWords(threadId: number): string[] {
     return Array.from(words).slice(0, 100);
 }
 
+function getConversationStarts(threadId: number): Map<string, [Date, number][]> {
+    const conversations = state.conversations.get(threadId);
+    let year = state.earliestDate.getFullYear();
+    let month = state.earliestDate.getMonth();
+
+    const countForMonth = new Map();
+    const counts = new Map();
+    state.threads.get(threadId).parties.forEach(name => {
+        countForMonth.set(name, 0);
+        counts.set(name, []);
+    });
+
+    conversations.forEach(conversation => {
+        const startTime = conversation[0].time;
+        while (year < startTime.getFullYear() || month < startTime.getMonth()) {
+            state.threads.get(threadId).parties.forEach(name => {
+                counts.get(name).push([new Date(year, month), countForMonth.get(name)]);
+                countForMonth.set(name, 0);
+            });
+            month += 1;
+            if (month == 12) {
+                month = 0;
+                year += 1;
+            }
+        }
+
+        const starter = conversation[0].author;
+        countForMonth.set(starter, countForMonth.get(starter) + 1);
+    });
+
+    state.threads.get(threadId).parties.forEach(name => {
+        counts.get(name).push([new Date(year, month), countForMonth.get(name)]);
+    });
+
+    return counts;
+}
+
 function getMessageProportions(): [string, number][] {
     const sorted = _.sortBy(
         Array.from(state.threads.values()), 
@@ -322,6 +359,7 @@ onmessage = function(message: MessageEvent) {
 
     if (command.type != 'parse_chunk' && !state.threads) {
         console.error("Expected worker state to contain parsed threads!");
+        console.error(command);
     }
 
     switch (command.type) {
@@ -359,6 +397,10 @@ onmessage = function(message: MessageEvent) {
         case "get_wordcloud":
             const words = getWordcloudWords(command.threadId);
             sendUpdate(new WorkerActions.GotWordcloud(command.threadId, words));
+            break;
+        case "get_conversation_starts":
+            const starts = getConversationStarts(command.threadId);
+            sendUpdate(new WorkerActions.GotConversationStarts(command.threadId, starts));
             break;
         default: const _exhaustiveCheck: never = command;
     }

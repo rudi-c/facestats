@@ -4,8 +4,6 @@ import * as React from 'react';
 import * as ReactDOM from "react-dom";
 import { connect } from 'react-redux';
 
-import Faux from 'react-faux-dom'
-
 import * as d3 from "d3";
 import d3Tip from "d3-tip";
 
