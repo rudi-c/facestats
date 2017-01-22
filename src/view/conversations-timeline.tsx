@@ -39,7 +39,7 @@ class ReactConversationsTimeline extends React.Component<any, any> {
         const parties = Array.from(next.conversationStarts.keys());
         const firstList = next.conversationStarts.get(parties[0]);
         const timeRange: [Date, Date] = [_.first(firstList)[0], _.last(firstList)[0]];
-        const conversationsMax = d3.max(parties.map(name => 
+        const conversationsMax = d3.max(parties.map(name =>
             d3.max(next.conversationStarts.get(name), d => d[1])
         ));
 
@@ -48,14 +48,14 @@ class ReactConversationsTimeline extends React.Component<any, any> {
         const z = d3.scaleOrdinal(d3.schemeCategory10).domain(parties);
         const line = d3.line()
             .curve(d3.curveLinear)
-            .x(d => x(d[0]))
+            .x(d => x(d[0] as any))
             .y(d => y(d[1]));
-        
+
         svg.append("g")
            .attr("class", "axis")
            .attr("transform", "translate(0, " + height + ")")
            .call(d3.axisBottom(x));
-        
+
         svg.append("g")
            .attr("class", "axis")
            .call(d3.axisLeft(y));
@@ -65,15 +65,15 @@ class ReactConversationsTimeline extends React.Component<any, any> {
             .enter()
             .append("g")
             .attr("class", "name");
-        
+
         city.append("path")
             .attr("class", "line")
             .attr("d", d => line(next.conversationStarts.get(d) as any))
             .style("stroke", d => z(d));
-        
+
         city.append("text")
-            .datum(d => ({ 
-                id: d, 
+            .datum(d => ({
+                id: d,
                 value: _.last(next.conversationStarts.get(d))
             }))
             .attr("transform", d => ("translate(" + x(d.value[0])) + "," + y(d.value[1]) + ")")
