@@ -7,6 +7,10 @@
 ```
 cd facestats/
 npm install
+git submodule update --init
+cd lib/htmlparser2
+npm install
+cd ../..
 npm start
 ```
 
