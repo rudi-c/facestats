@@ -301,6 +301,24 @@ function getMessageWordCounts(threadId: number): Map<string, Map<number, number>
     return counts
 }
 
+// Returns the length of conversations based on who started it.
+function getConversationLengths(threadId: number): Map<string, Map<number, number>> {
+    const thread = state.threads.get(threadId);
+    const counts: Map<string, Map<number, number>> = new Map();
+    thread.parties.forEach(name => counts.set(name, new Map()));
+
+    const conversations = state.conversations.get(threadId);
+    conversations.forEach(messages => {
+        const map = counts.get(messages[0].author);
+        if (map.has(messages.length)) {
+            map.set(messages.length, map.get(messages.length) + 1);
+        } else {
+            map.set(messages.length, 1);
+        }
+    });
+    return counts;
+}
+
 function getMessageProportions(): [string, number][] {
     const sorted = _.sortBy(
         Array.from(state.threads.values()),
@@ -399,6 +417,11 @@ onmessage = function(message: MessageEvent) {
         case "get_msg_word_counts":
             sendUpdate(new WorkerActions.GotMessageWordCounts(
                 getMessageWordCounts(command.threadId))
+            );
+            break;
+        case "get_conversation_lengths":
+            sendUpdate(new WorkerActions.GotConversationLengths(
+                getConversationLengths(command.threadId))
             );
             break;
         case "get_punchcard":

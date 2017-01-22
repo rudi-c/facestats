@@ -14,6 +14,17 @@ export function countMap<T>(values: T[]): Map<T, number> {
     return counts;
 }
 
+export function mapMap<K, U, V>(
+    map: Map<K, U>,
+    f: (K, U) => V
+    ): Map<K, V> {
+    const newMap: Map<K, V> = new Map();
+    Array.from(map.entries()).forEach(([key, value]) => {
+        newMap.set(key, f(key, value));
+    });
+    return newMap;
+}
+
 export function sum(values: number[]): number {
     return values.reduce((a, b) => a + b);
 }

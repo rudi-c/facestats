@@ -99,6 +99,10 @@ function reduceWorker(state : State, action: WorkerActions.t): State {
             return Object.assign({}, state, {
                 messageWordCounts: action.counts
             });
+        case "got_conversation_lengths":
+            return Object.assign({}, state, {
+                conversationLengths: action.counts
+            });
         case "got_punchcard":
             return Object.assign({}, state, {
                 punchcard: action.value,

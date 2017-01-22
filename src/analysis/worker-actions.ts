@@ -38,6 +38,14 @@ export module WorkerActions {
         }
     }
 
+    export class GotConversationLengths {
+        type: "got_conversation_lengths"
+        // name -> (bin size -> bin count)
+        constructor(public counts: Map<string, Map<number, number>>) {
+            this.type = "got_conversation_lengths";
+        }
+    }
+
     export class GotPunchcard {
         type: "got_punchcard"
         // array of (array of counts by hour) by day of week
@@ -77,6 +85,7 @@ export module WorkerActions {
         | GotMiscInfo
         | GotMessageCountByDay
         | GotMessageWordCounts
+        | GotConversationLengths
         | GotPunchcard
         | GotThreadDetails
         | GotWordcloud

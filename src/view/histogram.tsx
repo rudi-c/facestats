@@ -6,10 +6,13 @@ import { connect } from 'react-redux';
 
 import * as d3 from "d3";
 
+import { mapMap } from '../analysis/helpers'
+
 import { State } from '../state'
 
 interface Props {
     values: Map<string, Map<number, number>>
+    stacked: boolean
 }
 
 const bins = [1, 2, 5, 10, 20, 50, 100, 200, 500, 1000]
@@ -76,20 +79,69 @@ class ReactHistogram extends React.Component<any, any> {
             );
         });
         const dataByBinAsArray = Array.from(dataByBin.entries());
-        const maxValue = d3.max(allBins.map(binName =>
-            d3.max(dataByBin.get(binName), d => d[1])
-        ));
 
         const x0 = d3.scaleBand()
             .rangeRound([0, width])
             .paddingInner(0.1)
             .domain(allBins);
-        const x1 = d3.scaleBand()
-            .padding(0.05)
-            .domain(Array.from(this.props.values.keys()))
-            .rangeRound([0, x0.bandwidth()]);
-        const y = d3.scaleLinear().range([height, 0]).domain([0, maxValue]);
+        let y;
         const z = d3.scaleOrdinal(d3.schemeCategory10).domain(parties);
+
+        if (next.stacked) {
+            let maxValue = 0;
+            const dataBandsByBin: Map<string, [string, [number, number]][]> =
+                mapMap(dataByBin, (name, values) => {
+                    const bands: [string, [number, number]][] = [];
+                    let lower = 0;
+                    for (let i = 0; i < values.length; i++) {
+                        const upper = lower + values[i][1];
+                        bands.push([values[i][0], [lower, upper]]);
+                        lower = upper;
+                        maxValue = Math.max(maxValue, upper);
+                    }
+                    return bands;
+                });
+
+            y = d3.scaleLinear().range([height, 0]).domain([0, maxValue]);
+            console.log(maxValue);
+
+            svg.append("g")
+               .selectAll("g")
+               .data(Array.from(dataBandsByBin.entries()))
+               .enter().append("g")
+               .attr("transform", d => "translate(" + x0(d[0]) + ", 0)")
+               .selectAll("rect")
+               .data(d => d[1])
+               .enter().append("rect")
+               .attr("y", d => y(d[1][1]) )
+               .attr("height", d => y(d[1][0]) - y(d[1][1]))
+               .attr("width", x0.bandwidth())
+               .attr("fill", d => z(d[0]));
+        } else {
+            const x1 = d3.scaleBand()
+                .padding(0.05)
+                .domain(Array.from(next.values.keys()))
+                .rangeRound([0, x0.bandwidth()]);
+
+            const maxValue = d3.max(allBins.map(binName =>
+                d3.max(dataByBin.get(binName), d => d[1])
+            ));
+            y = d3.scaleLinear().range([height, 0]).domain([0, maxValue]);
+
+            svg.append("g")
+               .selectAll("g")
+               .data(dataByBinAsArray)
+               .enter().append("g")
+               .attr("transform", d => "translate(" + x0(d[0]) + ", 0)")
+               .selectAll("rect")
+               .data(d => d[1])
+               .enter().append("rect")
+               .attr("x", d => x1(d[0]))
+               .attr("y", d => y(d[1]))
+               .attr("width", x1.bandwidth())
+               .attr("height", d => height - y(d[1]))
+               .attr("fill", d => z(d[0]));
+        }
 
         svg.append("g")
            .attr("class", "axis")
@@ -99,21 +151,6 @@ class ReactHistogram extends React.Component<any, any> {
         svg.append("g")
            .attr("class", "axis")
            .call(d3.axisLeft(y));
-
-        svg.append("g")
-           .selectAll("g")
-           .data(dataByBinAsArray)
-           .enter()
-           .append("g")
-           .attr("transform", d => "translate(" + x0(d[0]) + ", 0)")
-           .selectAll("rect")
-           .data(d => d[1])
-           .enter().append("rect")
-           .attr("x", d => x1(d[0]))
-           .attr("y", d => y(d[1]))
-           .attr("width", x1.bandwidth())
-           .attr("height", d => height - y(d[1]))
-           .attr("fill", d => z(d[0]));
 
         const legend = svg.append("g")
             .attr("font-family", "sans-serif")
@@ -152,14 +189,14 @@ class ReactHistogram extends React.Component<any, any> {
     }
 }
 
-const RenderHistogram = function({ values }: Props): JSX.Element {
+const RenderHistogram = function({ values, stacked }: Props): JSX.Element {
     if (!values) {
         return null;
     }
 
     return (
         <div>
-            <ReactHistogram values={values} />
+            <ReactHistogram values={values} stacked={stacked} />
         </div>
     );
 }

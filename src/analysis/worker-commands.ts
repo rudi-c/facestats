@@ -31,6 +31,13 @@ export module WorkerCommands {
         }
     }
 
+    export class GetConversationLengths {
+        type: "get_conversation_lengths"
+        constructor(public threadId) {
+            this.type = "get_conversation_lengths";
+        }
+    }
+
     export class GetPunchcard {
         type: "get_punchcard";
         constructor(public threadIds: number[]) {
@@ -65,6 +72,7 @@ export module WorkerCommands {
         | GetMiscInfo
         | GetMessageCountByDay
         | GetMessageWordCounts
+        | GetConversationLengths
         | GetPunchcard
         | GetThreadDetails
         | GetWordcloud

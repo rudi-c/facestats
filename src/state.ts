@@ -13,6 +13,7 @@ export class State {
     miscInfo: Data.MiscInfo
     punchcard: number[][]
     messageWordCounts: Map<string, Map<number, number>>
+    conversationLengths: Map<string, Map<number, number>>
     conversationStarts: Map<string, [Date, number][]>
     maxMessagesInDay: number
 
@@ -33,6 +34,7 @@ export class State {
         this.miscInfo = null;
         this.punchcard = null;
         this.messageWordCounts = null;
+        this.conversationLengths = null;
         this.conversationStarts = null;
         this.maxMessagesInDay = 10;
 
