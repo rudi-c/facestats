@@ -16,11 +16,18 @@ export module WorkerCommands {
 
     export class GetMessageCountByDay {
         type: "get_msg_count_by_day"
-        constructor (public threadIds: number[],
-                     // If this is false, will only count the messages that you've written.
-                     public includeAllMessages: boolean = true,
-                     public blurRadius: number = 0) {
+        constructor(public threadIds: number[],
+                    // If this is false, will only count the messages that you've written.
+                    public includeAllMessages: boolean = true,
+                    public blurRadius: number = 0) {
             this.type = "get_msg_count_by_day";
+        }
+    }
+
+    export class GetMessageWordCounts {
+        type: "get_msg_word_counts"
+        constructor(public threadId) {
+            this.type = "get_msg_word_counts";
         }
     }
 

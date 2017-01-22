@@ -4,7 +4,7 @@ import * as Data from './data'
 import { WorkerActions } from './worker-actions'
 import { WorkerCommands } from './worker-commands'
 
-import { countMap, sendUpdate, sum } from './helpers'
+import { countMap, sendUpdate, splitOnWhitespace, sum } from './helpers'
 import { cleanup } from './cleanup'
 
 import { ThreadParser, Message, MessageThread } from './parse-threads'
@@ -283,6 +283,22 @@ function getConversationStarts(threadId: number): Map<string, [Date, number][]> 
     });
 
     return counts;
+}
+
+function getMessageWordCounts(threadId: number): Map<string, Map<number, number>> {
+    const thread = state.threads.get(threadId);
+    const counts: Map<string, Map<number, number>> = new Map();
+    thread.parties.forEach(name => counts.set(name, new Map()));
+    thread.messages.forEach(message => {
+        const count = splitOnWhitespace(message.text).length;
+        const map = counts.get(message.author);
+        if (map.has(count)) {
+            map.set(count, map.get(count) + 1);
+        } else {
+            map.set(count, 1);
+        }
+    });
+    return counts
 }
 
 function getMessageProportions(): [string, number][] {
