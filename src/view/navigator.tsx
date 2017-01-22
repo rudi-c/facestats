@@ -12,6 +12,7 @@ import { State } from '../state'
 import ConversationDonut from './conversation-donut'
 import ConversationsTimeline from './conversations-timeline'
 import MessageCountTimeline from './message-count-timeline'
+import Histogram from './histogram'
 import Punchcard from './punchcard'
 import Threads from './threads-list'
 
@@ -23,6 +24,7 @@ const styles = StyleSheet.create({
 
 interface StateProps {
     threadDetails: Data.ThreadDetails
+    messageWordCounts: Map<string, Map<number, number>>
     wordcloudWords: Immutable.Map<number, string[]>
 }
 
@@ -32,7 +34,7 @@ interface DispatchProps {
 interface AppProps extends StateProps, DispatchProps {
 }
 
-const RenderNavigator = function({ threadDetails, wordcloudWords }: AppProps) {
+const RenderNavigator = function({ threadDetails, messageWordCounts, wordcloudWords }: AppProps) {
     let detailsView = null;
     if (threadDetails) {
         // let wordcloud = null;
@@ -81,6 +83,7 @@ const RenderNavigator = function({ threadDetails, wordcloudWords }: AppProps) {
                 <MessageCountTimeline />
                 <Punchcard />
                 <ConversationsTimeline />
+                <Histogram values={messageWordCounts} />
             </div>
         </div>
     );
@@ -96,6 +99,7 @@ const mapStateToProps = function(state : State): StateProps {
     }
     return {
         threadDetails: threadDetails,
+        messageWordCounts: state.messageWordCounts,
         wordcloudWords: state.wordcloudWords,
     };
 }

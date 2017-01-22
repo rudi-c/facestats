@@ -95,6 +95,10 @@ function reduceWorker(state : State, action: WorkerActions.t): State {
                 msgCountByDate: action.value,
                 maxMessagesInDay: Math.max(max, state.maxMessagesInDay),
             });
+        case "got_msg_word_counts":
+            return Object.assign({}, state, {
+                messageWordCounts: action.counts
+            });
         case "got_punchcard":
             return Object.assign({}, state, {
                 punchcard: action.value,

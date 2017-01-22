@@ -92,6 +92,9 @@ const mapStateToProps = function(state : State): StateProps {
             state.worker.postMessage(new WorkerCommands.GetThreadDetails(threadId));
             state.worker.postMessage(new WorkerCommands.GetWordcloud(threadId));
             state.worker.postMessage(
+                new WorkerCommands.GetMessageWordCounts(threadId)
+            );
+            state.worker.postMessage(
                 new WorkerCommands.GetMessageCountByDay(newSelected, true, 7)
             );
             state.worker.postMessage(

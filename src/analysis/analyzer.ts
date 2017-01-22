@@ -4,7 +4,7 @@ import * as Data from './data'
 import { WorkerActions } from './worker-actions'
 import { WorkerCommands } from './worker-commands'
 
-import { countMap, sendUpdate, sum } from './helpers'
+import { countMap, sendUpdate, splitOnWhitespace, sum } from './helpers'
 import { cleanup } from './cleanup'
 
 import { ThreadParser, Message, MessageThread } from './parse-threads'
@@ -285,9 +285,25 @@ function getConversationStarts(threadId: number): Map<string, [Date, number][]> 
     return counts;
 }
 
+function getMessageWordCounts(threadId: number): Map<string, Map<number, number>> {
+    const thread = state.threads.get(threadId);
+    const counts: Map<string, Map<number, number>> = new Map();
+    thread.parties.forEach(name => counts.set(name, new Map()));
+    thread.messages.forEach(message => {
+        const count = splitOnWhitespace(message.text).length;
+        const map = counts.get(message.author);
+        if (map.has(count)) {
+            map.set(count, map.get(count) + 1);
+        } else {
+            map.set(count, 1);
+        }
+    });
+    return counts
+}
+
 function getMessageProportions(): [string, number][] {
     const sorted = _.sortBy(
-        Array.from(state.threads.values()), 
+        Array.from(state.threads.values()),
         thread => -thread.messages.length
     );
     const totalMessages = sum(sorted.map(thread => thread.messages.length));
@@ -379,6 +395,11 @@ onmessage = function(message: MessageEvent) {
                 command.blurRadius
             );
             sendUpdate(new WorkerActions.GotMessageCountByDay(counts));
+            break;
+        case "get_msg_word_counts":
+            sendUpdate(new WorkerActions.GotMessageWordCounts(
+                getMessageWordCounts(command.threadId))
+            );
             break;
         case "get_punchcard":
             const punchcard = getPunchcard(command.threadIds);
