@@ -36,7 +36,9 @@ export class ParseResults {
 let _parseTime = d3.timeParse("%A, %B %d, %Y at %I:%M%p %Z");
 function parseTime(raw: string): Date {
     // The %Z format specified of d3-time-format doesn't understand PST and PDT.
-    const time = _parseTime(raw.replace("PDT", "-07").replace("PST", "-08"));
+    const time = _parseTime(
+        raw.replace("PDT", "-07").replace("PST", "-08")
+           .replace("EDT", "-04").replace("EST", "-05"));
     if (!time) {
         console.error("Could not parse: " + raw);
         // TODO: Proper error handling
