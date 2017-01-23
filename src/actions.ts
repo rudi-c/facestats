@@ -75,54 +75,43 @@ export module Actions {
 }
 
 function reduceWorker(state : State, action: WorkerActions.t): State {
-    // TODO: Object spread operator?
     switch (action.type) {
         case "threads":
-            return Object.assign({}, state, {
+            return { ...state,
                 threads: action.threads,
                 timeToParseInMs: action.parsingTimeInMs,
                 view: "summary",
-            });
+            };
         case "ready_for_next_chunk":
             return state;
         case "got_misc_info":
-            return Object.assign({}, state, {
-                miscInfo: action.info,
-            });
+            return { ...state, miscInfo: action.info };
         case "got_message_count_by_day":
             const max = _.max(action.value.map(pair => pair[1]));
-            return Object.assign({}, state, {
+            return { ...state,
                 msgCountByDate: action.value,
                 maxMessagesInDay: Math.max(max, state.maxMessagesInDay),
-            });
+            };
         case "got_msg_word_counts":
-            return Object.assign({}, state, {
-                messageWordCounts: action.counts
-            });
+            return { ...state, messageWordCounts: action.counts };
         case "got_conversation_lengths":
-            return Object.assign({}, state, {
-                conversationLengths: action.counts
-            });
+            return { ...state, conversationLengths: action.counts };
         case "got_punchcard":
-            return Object.assign({}, state, {
-                punchcard: action.value,
-            });
+            return { ...state, punchcard: action.value };
         case "got_thread_details":
-            return Object.assign({}, state, {
+            return { ...state,
                 threadDetails: state.threadDetails.set(
                     action.threadId, action.details
                 )
-            });
+            };
         case "got_wordcloud":
-            return Object.assign({}, state, {
+            return { ...state,
                 wordcloudWords: state.wordcloudWords.set(
                     action.threadId, action.words
                 )
-            });
+            };
         case "got_conversation_starts":
-            return Object.assign({}, state, {
-                conversationStarts: action.starts
-            });
+            return { ...state, conversationStarts: action.starts };
         default: const _exhaustiveCheck: never = action;
     }
 }
@@ -132,19 +121,15 @@ export function reduce(state : State = defaultState, action: Actions.t): State {
         case "worker_action":
             return reduceWorker(state, action.action);
         case "worker_created":
-            return Object.assign({}, state, {
+            return { ...state,
                 worker: action.worker,
                 parsingProgress: 0,
                 view: "loading",
-            });
+            };
         case "move_to_navigator":
-            return Object.assign({}, state, {
-                view: "navigator",
-            });
+            return { ...state, view: "navigator" };
         case "update_progress":
-            return Object.assign({}, state, {
-                parsingProgress: action.progress
-            });
+            return { ...state, parsingProgress: action.progress };
         case "thread_clicked":
             let newSelected;
             if (action.additive) {
@@ -156,9 +141,7 @@ export function reduce(state : State = defaultState, action: Actions.t): State {
             } else {
                 newSelected = Immutable.Set.of(action.threadId);
             }
-            return Object.assign({}, state, {
-                selectedThreadIds: newSelected
-            });
+            return { ...state, selectedThreadIds: newSelected };
         // default: const _exhaustiveCheck: never = action;
         default: return state;
     }
