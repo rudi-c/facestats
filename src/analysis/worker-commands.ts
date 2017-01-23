@@ -1,68 +1,58 @@
 export module WorkerCommands {
     export class ParseChunk {
-        type: "parse_chunk"
+        type: "parse_chunk" = "parse_chunk"
         constructor(public chunk: string, 
                     public isLastChunk: boolean) {
-            this.type = "parse_chunk";
         }
     }
 
     export class GetMiscInfo {
-        type: "get_misc_info"
-        constructor() {
-            this.type = "get_misc_info";
-        }
+        type: "get_misc_info" = "get_misc_info"
+        constructor() {}
     }
 
     export class GetMessageCountByDay {
-        type: "get_msg_count_by_day"
+        type: "get_msg_count_by_day" = "get_msg_count_by_day"
         constructor(public threadIds: number[],
                     // If this is false, will only count the messages that you've written.
                     public includeAllMessages: boolean = true,
                     public blurRadius: number = 0) {
-            this.type = "get_msg_count_by_day";
         }
     }
 
     export class GetMessageWordCounts {
-        type: "get_msg_word_counts"
+        type: "get_msg_word_counts" = "get_msg_word_counts"
         constructor(public threadId) {
-            this.type = "get_msg_word_counts";
         }
     }
 
     export class GetConversationLengths {
-        type: "get_conversation_lengths"
+        type: "get_conversation_lengths" = "get_conversation_lengths"
         constructor(public threadId) {
-            this.type = "get_conversation_lengths";
         }
     }
 
     export class GetPunchcard {
-        type: "get_punchcard";
+        type: "get_punchcard" = "get_punchcard"
         constructor(public threadIds: number[]) {
-            this.type = "get_punchcard";
         }
     }
 
     export class GetThreadDetails {
-        type: "get_thread_details"
+        type: "get_thread_details" = "get_thread_details"
         constructor(public threadId: number) {
-            this.type = "get_thread_details";
         }
     }
 
     export class GetWordcloud {
-        type: "get_wordcloud"
+        type: "get_wordcloud" = "get_wordcloud"
         constructor(public threadId: number) {
-            this.type = "get_wordcloud";
         }
     }
 
     export class GetConversationStarts {
-        type: "get_conversation_starts"
+        type: "get_conversation_starts" = "get_conversation_starts"
         constructor(public threadId: number) {
-            this.type = "get_conversation_starts";
         }
     }
 
