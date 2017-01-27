@@ -9,6 +9,7 @@ import * as d3 from "d3";
 import { mapMap } from '../analysis/helpers'
 
 import { State } from '../state'
+import D3Harness from './d3-harness'
 
 interface Props {
     values: Map<string, Map<number, number>>
@@ -47,9 +48,7 @@ function getAllBins(): string[] {
 }
 
 // Based of http://bl.ocks.org/mbostock/3887051
-class ReactHistogram extends React.Component<any, any> {
-    props: Props
-
+class ReactHistogram extends D3Harness<Props> {
     constructor(props) {
         super(props);
     }
@@ -103,7 +102,6 @@ class ReactHistogram extends React.Component<any, any> {
                 });
 
             y = d3.scaleLinear().range([height, 0]).domain([0, maxValue]);
-            console.log(maxValue);
 
             svg.append("g")
                .selectAll("g")
@@ -172,20 +170,6 @@ class ReactHistogram extends React.Component<any, any> {
             .attr("y", 9.5)
             .attr("dy", "0.32em")
             .text(d => d);
-    }
-
-    componentDidMount() {
-        this.generate(this.props);
-    }
-
-    componentWillReceiveProps(next: Props) {
-        this.generate(next);
-    }
-
-    render() {
-        return (
-            <svg></svg>
-        );
     }
 }
 

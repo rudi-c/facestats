@@ -7,6 +7,7 @@ import { connect } from 'react-redux';
 import * as d3 from "d3";
 
 import { State } from '../state'
+import D3Harness from './d3-harness'
 
 interface Props {
     conversationStarts: Map<string, [Date, number][]>
@@ -15,9 +16,7 @@ interface Props {
 // Based off http://bl.ocks.org/mbostock/3884955
 // TODO: A legend would be nice so that the names don't pile up on each other
 // TODO: Would a barplot be more readable than a line plot?
-class ReactConversationsTimeline extends React.Component<any, any> {
-    props: { conversationStarts: Map<string, [Date, number][]> }
-
+class ReactConversationsTimeline extends D3Harness<Props> {
     constructor(props) {
         super(props);
     }
@@ -81,20 +80,6 @@ class ReactConversationsTimeline extends React.Component<any, any> {
             .attr("dy", "0.35em")
             .style("font", "10px sans-serif")
             .text(d => d.id);
-    }
-
-    componentDidMount() {
-        this.generate(this.props);
-    }
-
-    componentWillReceiveProps(next: Props) {
-        this.generate(next);
-    }
-
-    render() {
-        return (
-            <svg></svg>
-        );
     }
 }
 

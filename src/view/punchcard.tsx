@@ -8,6 +8,7 @@ import * as d3 from "d3";
 import d3Tip from "d3-tip";
 
 import { State } from '../state'
+import D3Harness from './d3-harness'
 
 interface Props {
     punchcard: number[][]
@@ -21,15 +22,13 @@ const hours = _.flatten([
 // Monday == 0, Sunday == 6
 const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
 
-class ReactPunchcard extends React.Component<any, any> {
-    props: { punchcard: number[][] }
-
+class ReactPunchcard extends D3Harness<Props> {
     constructor(props) {
         super(props);
     }
 
-    componentDidMount() {
-        const maxCount = _.max(_.flatten(this.props.punchcard));
+    generate(next: Props) {
+        const maxCount = _.max(_.flatten(next.punchcard));
 
         var margin = {top: 20, right: 20, bottom: 30, left: 50},
             width = 700 - margin.left - margin.right,
@@ -61,7 +60,7 @@ class ReactPunchcard extends React.Component<any, any> {
         svg.call(tip);
 
         const row = svg.selectAll("g")
-            .data(this.props.punchcard)
+            .data(next.punchcard)
             .enter()
             .append("g")
             .attr("transform", (row, i) => "translate(0, " + i * 50 + ")");
@@ -89,12 +88,6 @@ class ReactPunchcard extends React.Component<any, any> {
             .attr("text-anchor", "middle")
             .attr("transform", (count, i) => "translate(" + (i * 20 + 100) + ", 0)")
             .text(time => time);
-    }
-
-    render() {
-        return (
-            <svg></svg>
-        );
     }
 }
 
