@@ -7,10 +7,18 @@ import { fbEmailRegex } from './helpers'
 class Relation {
     // Prefer using Immutable.Set as it comes with useful built-in helper functions.
     constructor(public thread: MessageThread,
+                // Names that appear in the thread author list
                 public statedParties: Immutable.Set<string>,
+                // Ids that appear in the message list but not author list
                 public unknownIds: Immutable.Set<number>,
+                // Names that appear in the message list but not author list
                 public unknownNames: Immutable.Set<string>) {
     }
+}
+
+function numberIfId(name) {
+    const result = name.match(fbEmailRegex);
+    return result ? parseInt(result[1]) : name;
 }
 
 function makeRelations(threads: MessageThread[]): Relation[] {
@@ -18,15 +26,16 @@ function makeRelations(threads: MessageThread[]): Relation[] {
         const statedParties = Immutable.Set(thread.parties);
         const actualParties = Immutable.Set(thread.messages.map(msg => msg.author));
 
+        const statedIds = Immutable.Set<number>(
+            thread.parties.map(numberIfId).filter(Number.isInteger)
+        );
+
         // Assume no one would do something pathological like set their Facebook names to the
         // format of the Facebook email. There's no way we could tell the difference.
-        const parsedNames = actualParties.map(name => {
-            const result = name.match(fbEmailRegex);
-            return result ? parseInt(result[1]) : name;
-        }).toArray();
+        const parsedNames = actualParties.map(numberIfId).toArray();
 
         const [ids, names] = _.partition(parsedNames, Number.isInteger);
-        const unknownIds = Immutable.Set<number>(ids);
+        const unknownIds = Immutable.Set<number>(ids).subtract(statedIds);
         const unknownNames = Immutable.Set<string>(names).subtract(statedParties);
 
         return new Relation(thread, statedParties, unknownIds, unknownNames);
@@ -146,6 +155,14 @@ function applyMapping(relations: Relation[], knownIds: Map<number, Immutable.Set
     });
 }
 
+function takeRemainingUnknownsAsLiteral(threads: MessageThread[]) {
+    threads.forEach(thread => {
+        const statedParties = Immutable.Set(thread.parties);
+        const actualParties = Immutable.Set(thread.messages.map(msg => msg.author));
+        thread.parties = statedParties.union(actualParties).toArray();
+    });
+}
+
 export function cleanup(threads: MessageThread[]) {
     console.log("Cleaning up " + threads.length + " threads...");
 
@@ -153,4 +170,5 @@ export function cleanup(threads: MessageThread[]) {
     resolveNameOrdering(relations);
     const knownIds = makeIdMapping(relations);
     applyMapping(relations, knownIds);
+    takeRemainingUnknownsAsLiteral(threads);
 }
