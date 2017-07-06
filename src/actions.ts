@@ -112,6 +112,8 @@ function reduceWorker(state : State, action: WorkerActions.t): State {
             };
         case "got_conversation_starts":
             return { ...state, conversationStarts: action.starts };
+        case "got_words_frequency":
+            return { ...state, wordSearchCounts: action.counts };
         default: const _exhaustiveCheck: never = action;
     }
 }

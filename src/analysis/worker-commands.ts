@@ -56,6 +56,13 @@ export module WorkerCommands {
         }
     }
 
+    export class GetWordsFrequency {
+        type: "get_words_frequency" = "get_words_frequency"
+        constructor(public threadId: number,
+                    public wordsToSearch: string[]) {
+        }
+    }
+
     // Jane Street OCaml convention...
     export type t =
           ParseChunk
@@ -67,4 +74,5 @@ export module WorkerCommands {
         | GetThreadDetails
         | GetWordcloud
         | GetConversationStarts
+        | GetWordsFrequency
 }

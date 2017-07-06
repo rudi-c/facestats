@@ -27,6 +27,7 @@ interface StateProps {
     messageWordCounts: Map<string, Map<number, number>>
     threadDetails: Data.ThreadDetails
     wordcloudWords: Immutable.Map<number, string[]>
+    wordSearchCounts: Map<string, number>
 }
 
 interface DispatchProps {
@@ -38,7 +39,8 @@ interface AppProps extends StateProps, DispatchProps {
 const RenderNavigator = function({ threadDetails,
                                    conversationLengths,
                                    messageWordCounts,
-                                   wordcloudWords
+                                   wordcloudWords,
+                                   wordSearchCounts
                                 }: AppProps) {
     let detailsView = null;
     if (threadDetails) {
@@ -75,6 +77,12 @@ const RenderNavigator = function({ threadDetails,
                     })
                 }
                 </div>
+                {                    
+                    Array.from(wordSearchCounts.entries()).map((entry, id) => {
+                        console.log(entry);
+                        return (<p key={id}>{entry[0]}: {entry[1]}</p>);
+                    })
+                }
             </div>
         );
     }
@@ -108,6 +116,7 @@ const mapStateToProps = function(state : State): StateProps {
         messageWordCounts: state.messageWordCounts,
         threadDetails: threadDetails,
         wordcloudWords: state.wordcloudWords,
+        wordSearchCounts: state.wordSearchCounts,
     };
 }
 

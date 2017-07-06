@@ -15,6 +15,7 @@ export class State {
     messageWordCounts: Map<string, Map<number, number>>
     conversationLengths: Map<string, Map<number, number>>
     conversationStarts: Map<string, [Date, number][]>
+    wordSearchCounts: Map<string, number>
     maxMessagesInDay: number
 
     selectedThreadIds: Immutable.Set<number>

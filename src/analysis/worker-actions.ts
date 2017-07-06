@@ -68,6 +68,13 @@ export module WorkerActions {
         }
     }
 
+    export class GotWordsFrequency {
+        type: "got_words_frequency" = "got_words_frequency"
+        constructor(public threadId: number,
+                    public counts: Map<string, number>) {                
+        }
+    }
+
     // Jane Street OCaml convention...
     export type t =
           ReadyForNextChunk
@@ -80,4 +87,5 @@ export module WorkerActions {
         | GotThreadDetails
         | GotWordcloud
         | GotConversationStarts
+        | GotWordsFrequency
 }

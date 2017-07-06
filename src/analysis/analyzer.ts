@@ -340,6 +340,25 @@ function getMessageProportions(): [string, number][] {
     return proportions;
 }
 
+function getWordsFrequency(threadId: number, wordsToSearch: string[]): Map<string, number> {
+    const thread = state.threads.get(threadId);
+    const counts = new Map();
+    wordsToSearch = wordsToSearch.map(word => word.toLowerCase());
+    wordsToSearch.forEach(word => counts.set(word, 0));
+    thread.messages.forEach(message => {
+        let words = splitOnWhitespace(message.text).map(word => word.toLowerCase());
+        wordsToSearch.forEach(wordToSearch => {
+            words.forEach(word => {
+                if (word === wordToSearch) {
+                    counts.set(word, counts.get(word) + 1);
+                }
+            });
+        });
+    });
+    console.log(counts);
+    return counts;
+}
+
 // Group conversations are not unique (e.g. John, Adam, Sam could appear multiple times).
 // Individual conversations are not unique. There's a limit of 10,000 per thread (in the HTML data),
 // and I'm not sure if it could be broken in pieces for other reasons.
@@ -445,6 +464,10 @@ onmessage = function(message: MessageEvent) {
         case "get_conversation_starts":
             const starts = getConversationStarts(command.threadId);
             sendUpdate(new WorkerActions.GotConversationStarts(command.threadId, starts));
+            break;
+        case "get_words_frequency":
+            const wordFrequency = getWordsFrequency(command.threadId, command.wordsToSearch)
+            sendUpdate(new WorkerActions.GotWordsFrequency(command.threadId, wordFrequency));
             break;
         default: const _exhaustiveCheck: never = command;
     }

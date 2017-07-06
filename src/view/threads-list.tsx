@@ -106,6 +106,9 @@ const mapStateToProps = function(state : State): StateProps {
             state.worker.postMessage(
                 new WorkerCommands.GetConversationStarts(threadId)
             );
+            state.worker.postMessage(
+                new WorkerCommands.GetWordsFrequency(threadId, ["lol", "hi"])
+            );
         },
     }
 }
