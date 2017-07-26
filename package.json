@@ -5,6 +5,7 @@
   "main": "index.js",
   "scripts": {
     "build": "webpack --config config/webpack.config.js",
+    "lint": "tslint -c tslint.json 'src/**/*.ts' || true",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],

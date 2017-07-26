@@ -14,6 +14,16 @@ cd ../..
 npm start
 ```
 
+## Development
+
+Install the Typescript linter
+
+```
+npm install -g tslint typescript
+```
+
+and lint via `npm run lint`
+
 # Usage
 
 [Download a copy of your Facebook data.](https://www.facebook.com/settings). Unzip, open your browser at `localhost:3000`, choose `messages.htm` from your facebook data. This will generate plots and information. This may take a few minutes -- I personally have 30mb of message history over 4+ years. Currently all the code runs locally nothing gets uploaded to any server.
