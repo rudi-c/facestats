@@ -1,13 +1,13 @@
-import * as parse5 from 'parse5';
-import * as d3 from 'd3-time-format';
-import * as _ from 'underscore';
+import * as d3 from "d3-time-format";
+import * as parse5 from "parse5";
+import * as _ from "underscore";
 
-const htmlparser2 = require("../../lib/htmlparser2")
+const htmlparser2 = require("../../lib/htmlparser2");
 
-import { WorkerActions } from '../analysis/worker-actions'
-import { sendUpdate } from './helpers'
+import { WorkerActions } from "../analysis/worker-actions";
+import { sendUpdate } from "./helpers";
 
-type TextNode = parse5.AST.Default.TextNode
+type TextNode = parse5.AST.Default.TextNode;
 type ASTElement = parse5.AST.Default.Element;
 
 export class Message {
@@ -33,7 +33,7 @@ export class ParseResults {
     }
 }
 
-let _parseTime = d3.timeParse("%A, %B %d, %Y at %I:%M%p %Z");
+const _parseTime = d3.timeParse("%A, %B %d, %Y at %I:%M%p %Z");
 function parseTime(raw: string): Date {
     // The %Z format specified of d3-time-format doesn't understand PST and PDT.
     const time = _parseTime(
@@ -42,36 +42,36 @@ function parseTime(raw: string): Date {
     if (!time) {
         console.error("Could not parse: " + raw);
         // TODO: Proper error handling
-        throw "";
+        throw new Error("");
     }
     return time;
 }
 
 class Handler {
-    tagClass?: string
-    childHandlers?: Handler[]
-    onFinish: (children: any[]) => any
+    public tagClass?: string;
+    public childHandlers?: Handler[];
+    public onFinish: (children: any[]) => any;
 
     constructor(public tagName: string) {
         this.onFinish = children => children;
     }
 
-    withClass(tagClass: string) {
+    public withClass(tagClass: string) {
         this.tagClass = tagClass;
         return this;
     }
 
-    withChildHandlers(childHandlers: Handler[]) {
+    public withChildHandlers(childHandlers: Handler[]) {
         this.childHandlers = childHandlers;
         return this;
     }
 
-    withOnFinish(onFinish) {
+    public withOnFinish(onFinish) {
         this.onFinish = onFinish;
         return this;
     }
 
-    matches(name, attribs) {
+    public matches(name, attribs) {
         return this.tagName === name && (!this.tagClass || this.tagClass === attribs.class);
     }
 }
@@ -83,7 +83,7 @@ class IgnoreHandler extends Handler {
         this.onFinish = _ => undefined;
     }
 
-    matches(name, attribs) {
+    public matches(name, attribs) {
         return true;
     }
 }
@@ -111,7 +111,7 @@ const messageMetadataHandler = new Handler("div")
                     author: user,
                     time: parseTime(timeString),
                 };
-            })
+            }),
     ])
     .withOnFinish(firstChild);
 
@@ -131,16 +131,16 @@ const threadHandler = new Handler("div")
                 console.error(meta);
                 console.error(i);
                 // TODO: Proper error handling
-                throw "";
+                throw new Error("");
             }
             messages.push(new Message(meta.author, meta.time, children[i + 1]));
         }
 
         return {
             parties,
-            messages
+            messages,
         };
-    })
+    });
 
 const contentsDivHandler = new Handler("div").withChildHandlers([threadHandler]);
 
@@ -155,10 +155,10 @@ const contentsHandler = new Handler("div")
         const name = children[0];
         const threadGroups = children.slice(1);
         const threads = _.flatten(threadGroups).map((thread, i) =>
-            new MessageThread(i, thread.parties, thread.messages)
+            new MessageThread(i, thread.parties, thread.messages),
         );
         return new ParseResults(threads, name);
-    })
+    });
 
 const bodyHandler = new Handler("body")
     .withChildHandlers([contentsHandler, new IgnoreHandler()])
@@ -173,12 +173,12 @@ const rootHandler = new Handler("")
     .withOnFinish(firstChild);
 
 export class ThreadParser {
-    public parseStartTime: number
+    public parseStartTime: number;
 
-    private handlerStack: Handler[]
-    private childrenStack: any[][]
-    private lastAddedTextChild: boolean
-    private parser: any
+    private handlerStack: Handler[];
+    private childrenStack: any[][];
+    private lastAddedTextChild: boolean;
+    private parser: any;
 
     constructor() {
         this.handlerStack = [rootHandler];
@@ -187,11 +187,11 @@ export class ThreadParser {
         this.initParser();
     }
 
-    initParser() {
+    public initParser() {
         this.parseStartTime = new Date().getTime();
         this.parser = new htmlparser2.Parser({
             onopentag: (name, attribs) => {
-                for (let handler of _.last(this.handlerStack).childHandlers) {
+                for (const handler of _.last(this.handlerStack).childHandlers) {
                     if (handler.matches(name, attribs)) {
                         this.handlerStack.push(handler);
                         this.childrenStack.push([]);
@@ -203,7 +203,7 @@ export class ThreadParser {
                 console.error(name);
                 console.error(attribs);
                 // TODO: Proper error handling
-                throw "";
+                throw new Error("");
             },
             ontext: text => {
                 const children = _.last(this.childrenStack);
@@ -240,11 +240,11 @@ export class ThreadParser {
         }, { decodeEntities: true });
     }
 
-    onChunk(chunk: string) {
+    public onChunk(chunk: string) {
         this.parser.write(chunk);
     }
 
-    finish() {
+    public finish() {
         this.parser.end();
         const end = new Date().getTime();
         console.log("Total parsing time: " + (end - this.parseStartTime));

@@ -1,25 +1,25 @@
-import * as _ from 'underscore';
+import * as _ from "underscore";
 
-import * as Data from './data'
-import { WorkerActions } from './worker-actions'
-import { WorkerCommands } from './worker-commands'
+import * as Data from "./data";
+import { WorkerActions } from "./worker-actions";
+import { WorkerCommands } from "./worker-commands";
 
-import { countMap, sendUpdate, splitOnWhitespace, sum } from './helpers'
-import { cleanup } from './cleanup'
+import { cleanup } from "./cleanup";
+import { countMap, sendUpdate, splitOnWhitespace, sum } from "./helpers";
 
-import { ThreadParser, Message, MessageThread } from './parse-threads'
+import { Message, MessageThread, ThreadParser } from "./parse-threads";
 
 interface WorkerState {
-    threads: Map<number, MessageThread>
-    threadDetails: Map<number, Data.ThreadDetails>
-    conversations: Map<number, Message[][]>
-    yourName: string
-    earliestDate: Date
-    latestDate: Date
-    parser: ThreadParser
+    threads: Map<number, MessageThread>;
+    threadDetails: Map<number, Data.ThreadDetails>;
+    conversations: Map<number, Message[][]>;
+    yourName: string;
+    earliestDate: Date;
+    latestDate: Date;
+    parser: ThreadParser;
 }
 
-let state : WorkerState = {
+const state: WorkerState = {
     threads: null,
     threadDetails: new Map(),
     conversations: new Map(),
@@ -27,20 +27,20 @@ let state : WorkerState = {
     earliestDate: null,
     latestDate: null,
     parser: null,
-}
+};
 
 function simplifiedThreadName(thread: MessageThread): string {
     const withoutYou = thread.parties.filter(name => name !== state.yourName);
     if (withoutYou.length >= 4) {
         // TODO: Could show the person who started the most conversations.
-        return withoutYou[0] + " and " + (withoutYou.length - 1) + " others"
+        return withoutYou[0] + " and " + (withoutYou.length - 1) + " others";
     } else {
         return withoutYou.join(" ");
     }
 }
 
 function findConversationsForThread(thread: MessageThread): Message[][] {
-    let blocks: Message[][] = [];
+    const blocks: Message[][] = [];
     let currentBlock: Message[] = [];
     let lastMessageTime = null;
 
@@ -78,7 +78,7 @@ function analyzeThreadDetails(thread: MessageThread): Data.ThreadDetails {
     return new Data.ThreadDetails(
         Array.from(messageCounts),
         Array.from(starterCounts),
-        Array.from(enderCounts)
+        Array.from(enderCounts),
     );
 }
 
@@ -86,7 +86,7 @@ function calendarDate(timeDate: Date): Date {
     return new Date(
         timeDate.getFullYear(),
         timeDate.getMonth(),
-        timeDate.getDate()
+        timeDate.getDate(),
     );
 }
 
@@ -102,7 +102,7 @@ function getMessageCalendarDates(threadIds: number[], includeAllMessages: boolea
     const dates = [];
     threadsToCount.forEach(thread => {
         thread.messages.forEach(message => {
-            if (includeAllMessages || message.author == state.yourName) {
+            if (includeAllMessages || message.author === state.yourName) {
                 dates.push(calendarDate(message.time));
             }
         });
@@ -115,7 +115,7 @@ function getMessagesTimeRange() {
     state.threads.forEach(thread => {
         thread.messages.forEach(message => {
             dates.push(message.time);
-        })
+        });
     });
 
     let earliest = dates[0].getTime();
@@ -134,8 +134,8 @@ function getMessagesTimeRange() {
     state.latestDate = calendarDate(new Date(latest));
 }
 
-function applyBlur(counts: [Date, number][], blurRadius: number): [Date, number][] {
-    const blurFilter : number[] = [];
+function applyBlur(counts: Array<[Date, number]>, blurRadius: number): Array<[Date, number]> {
+    const blurFilter: number[] = [];
     const sigma = blurRadius / 3;
     let filterSum = 0;
     for (let i = -blurRadius; i <= blurRadius; i++) {
@@ -150,14 +150,14 @@ function applyBlur(counts: [Date, number][], blurRadius: number): [Date, number]
         blurFilter[i] /= filterSum;
     }
 
-    const result: [Date, number][] = [];
+    const result: Array<[Date, number]> = [];
 
     // Left edge
     for (let i = 0; i < blurRadius; i++) {
         let sum = 0;
         let filterSum = 0;
         for (let j = -i; j <= blurRadius; j++) {
-            let filterValue = blurFilter[-i + blurRadius];
+            const filterValue = blurFilter[-i + blurRadius];
             filterSum += filterValue;
             sum += filterValue * counts[i + j][1];
         }
@@ -178,7 +178,7 @@ function applyBlur(counts: [Date, number][], blurRadius: number): [Date, number]
         let sum = 0;
         let filterSum = 0;
         for (let j = -blurRadius; j < counts.length - i; j++) {
-            let filterValue = blurFilter[j + blurRadius];
+            const filterValue = blurFilter[j + blurRadius];
             filterSum += filterValue;
             sum += filterValue * counts[i + j][1];
         }
@@ -188,7 +188,7 @@ function applyBlur(counts: [Date, number][], blurRadius: number): [Date, number]
     return result;
 }
 
-function getMsgCountByDay(threadIds: number[], includeAllMessages: boolean, blurRadius: number): [Date, number][] {
+function getMsgCountByDay(threadIds: number[], includeAllMessages: boolean, blurRadius: number): Array<[Date, number]> {
     if (!state.earliestDate || !state.latestDate) {
         getMessagesTimeRange();
     }
@@ -199,8 +199,8 @@ function getMsgCountByDay(threadIds: number[], includeAllMessages: boolean, blur
     const counts = countMap(dates.map(date => date.getTime()));
 
     let currentDate = state.earliestDate;
-    let latestDate = state.latestDate;
-    let countForAllDates: [Date, number][] = [];
+    const latestDate = state.latestDate;
+    let countForAllDates: Array<[Date, number]> = [];
     while (currentDate <= latestDate) {
        currentDate = new Date(currentDate.setDate(currentDate.getDate() + 1));
        if (counts.has(currentDate.getTime())) {
@@ -248,7 +248,7 @@ function getWordcloudWords(threadId: number): string[] {
     return Array.from(words).slice(0, 100);
 }
 
-function getConversationStarts(threadId: number): Map<string, [Date, number][]> {
+function getConversationStarts(threadId: number): Map<string, Array<[Date, number]>> {
     const conversations = state.conversations.get(threadId);
     let year = state.earliestDate.getFullYear();
     let month = state.earliestDate.getMonth();
@@ -268,7 +268,7 @@ function getConversationStarts(threadId: number): Map<string, [Date, number][]> 
                 countForMonth.set(name, 0);
             });
             month += 1;
-            if (month == 12) {
+            if (month === 12) {
                 month = 0;
                 year += 1;
             }
@@ -298,7 +298,7 @@ function getMessageWordCounts(threadId: number): Map<string, Map<number, number>
             map.set(count, 1);
         }
     });
-    return counts
+    return counts;
 }
 
 // Returns the length of conversations based on who started it.
@@ -319,15 +319,15 @@ function getConversationLengths(threadId: number): Map<string, Map<number, numbe
     return counts;
 }
 
-function getMessageProportions(): [string, number][] {
+function getMessageProportions(): Array<[string, number]> {
     const sorted = _.sortBy(
         Array.from(state.threads.values()),
-        thread => -thread.messages.length
+        thread => -thread.messages.length,
     );
     const totalMessages = sum(sorted.map(thread => thread.messages.length));
     let totalSoFar = 0;
-    let proportions = [];
-    for (let thread of sorted) {
+    const proportions = [];
+    for (const thread of sorted) {
         totalSoFar += thread.messages.length;
         proportions.push([simplifiedThreadName(thread), thread.messages.length]);
         // There will be too much of a long tail of threads with very few
@@ -346,7 +346,7 @@ function getWordsFrequency(threadId: number, wordsToSearch: string[]): Map<strin
     wordsToSearch = wordsToSearch.map(word => word.toLowerCase());
     wordsToSearch.forEach(word => counts.set(word, 0));
     thread.messages.forEach(message => {
-        let words = splitOnWhitespace(message.text).map(word => word.toLowerCase());
+        const words = splitOnWhitespace(message.text).map(word => word.toLowerCase());
         wordsToSearch.forEach(wordToSearch => {
             words.forEach(word => {
                 if (word === wordToSearch) {
@@ -355,7 +355,6 @@ function getWordsFrequency(threadId: number, wordsToSearch: string[]): Map<strin
             });
         });
     });
-    console.log(counts);
     return counts;
 }
 
@@ -370,7 +369,7 @@ function dedupThreads(threads: MessageThread[]): MessageThread[] {
             new MessageThread(
                 threadGroup[0].id,
                 threadGroup[0].parties,
-                _.flatten(threadGroup.map(thread => thread.messages)))
+                _.flatten(threadGroup.map(thread => thread.messages))),
         );
 }
 
@@ -384,14 +383,14 @@ function parseChunk(chunk, isLastChunk) {
         const threadsList = dedupThreads(parseResults.threads);
         cleanup(threadsList);
         const threadInfos = threadsList.map(thread =>
-            new Data.ThreadInfo(thread.id, thread.parties, thread.messages.length)
+            new Data.ThreadInfo(thread.id, thread.parties, thread.messages.length),
         );
 
         state.threads = new Map();
         state.yourName = parseResults.yourName;
         threadsList.forEach(thread => {
             state.threads.set(thread.id, thread);
-        })
+        });
 
         const sortedThreadInfos = _.sortBy(threadInfos, info => -info.length);
 
@@ -407,10 +406,10 @@ function parseChunk(chunk, isLastChunk) {
     }
 }
 
-onmessage = function(message: MessageEvent) {
+function onmessage(message: MessageEvent) {
     const command: WorkerCommands.t = message.data;
 
-    if (command.type != 'parse_chunk' && !state.threads) {
+    if (command.type !== "parse_chunk" && !state.threads) {
         console.error("Expected worker state to contain parsed threads!");
         console.error(command);
     }
@@ -422,25 +421,25 @@ onmessage = function(message: MessageEvent) {
         case "get_misc_info":
             const proportions = getMessageProportions();
             sendUpdate(new WorkerActions.GotMiscInfo(
-                new Data.MiscInfo(state.yourName, proportions))
+                new Data.MiscInfo(state.yourName, proportions)),
             );
             break;
         case "get_msg_count_by_day":
             const counts = getMsgCountByDay(
                 command.threadIds,
                 command.includeAllMessages,
-                command.blurRadius
+                command.blurRadius,
             );
             sendUpdate(new WorkerActions.GotMessageCountByDay(counts));
             break;
         case "get_msg_word_counts":
             sendUpdate(new WorkerActions.GotMessageWordCounts(
-                getMessageWordCounts(command.threadId))
+                getMessageWordCounts(command.threadId)),
             );
             break;
         case "get_conversation_lengths":
             sendUpdate(new WorkerActions.GotConversationLengths(
-                getConversationLengths(command.threadId))
+                getConversationLengths(command.threadId)),
             );
             break;
         case "get_punchcard":
@@ -466,7 +465,7 @@ onmessage = function(message: MessageEvent) {
             sendUpdate(new WorkerActions.GotConversationStarts(command.threadId, starts));
             break;
         case "get_words_frequency":
-            const wordFrequency = getWordsFrequency(command.threadId, command.wordsToSearch)
+            const wordFrequency = getWordsFrequency(command.threadId, command.wordsToSearch);
             sendUpdate(new WorkerActions.GotWordsFrequency(command.threadId, wordFrequency));
             break;
         default: const _exhaustiveCheck: never = command;

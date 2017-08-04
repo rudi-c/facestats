@@ -1,8 +1,8 @@
-import * as _ from 'underscore';
-import * as Immutable from 'immutable'
+import * as Immutable from "immutable";
+import * as _ from "underscore";
 
-import { Message, MessageThread } from './parse-threads'
-import { fbEmailRegex } from './helpers'
+import { fbEmailRegex } from "./helpers";
+import { Message, MessageThread } from "./parse-threads";
 
 class Relation {
     // Prefer using Immutable.Set as it comes with useful built-in helper functions.
@@ -18,7 +18,7 @@ class Relation {
 
 function numberIfId(name) {
     const result = name.match(fbEmailRegex);
-    return result ? parseInt(result[1]) : name;
+    return result ? parseInt(result[1], 10) : name;
 }
 
 function makeRelations(threads: MessageThread[]): Relation[] {
@@ -27,7 +27,7 @@ function makeRelations(threads: MessageThread[]): Relation[] {
         const actualParties = Immutable.Set(thread.messages.map(msg => msg.author));
 
         const statedIds = Immutable.Set<number>(
-            thread.parties.map(numberIfId).filter(Number.isInteger)
+            thread.parties.map(numberIfId).filter(Number.isInteger),
         );
 
         // Assume no one would do something pathological like set their Facebook names to the
@@ -54,15 +54,15 @@ function resolveNameOrdering(relations: Relation[]) {
         relation.unknownNames.forEach(unknown => {
             const nameComponents = Immutable.Set(unknown.split(" "));
             const matchCounts = relation.statedParties.toArray().map(stated => {
-                let match: [number, string] =
+                const match: [number, string] =
                     [Immutable.Set(stated.split(" ")).intersect(nameComponents).size, stated];
                 return match;
             });
             const bestNumberOfMatchingComponents = _.max(matchCounts.map(count => count[0]));
 
             // Only resolve a mapping if there is no tie.
-            const bests = matchCounts.filter(count => count[0] == bestNumberOfMatchingComponents);
-            if (bests.length == 1) {
+            const bests = matchCounts.filter(count => count[0] === bestNumberOfMatchingComponents);
+            if (bests.length === 1) {
                 mapping.set(unknown, bests[0][1]);
             }
         });
@@ -71,7 +71,7 @@ function resolveNameOrdering(relations: Relation[]) {
             if (mapping.has(message.author)) {
                 message.author = mapping.get(message.author);
             }
-        })
+        });
     });
 }
 
@@ -94,11 +94,10 @@ function findMappingsByElimination(relation: Relation,
         .reduce((acc, id) => knownIds.has(id) ? acc.merge(knownIds.get(id)) : acc,
                 Immutable.Set<string>());
     const freeParties = relation.statedParties.subtract(knownParties);
-    if (unknownIds.size == 1 && freeParties.size == 1) {
+    if (unknownIds.size === 1 && freeParties.size === 1) {
         addKnownId(knownIds, unknownIds.first(), freeParties.first());
     }
 }
-
 
 function makeIdMapping(relations: Relation[]): Map<number, Immutable.Set<string>> {
     const knownIds = new Map<number, Immutable.Set<string>>();
@@ -129,16 +128,15 @@ function makeIdMapping(relations: Relation[]): Map<number, Immutable.Set<string>
     return knownIds;
 }
 
-
 function applyMapping(relations: Relation[], knownIds: Map<number, Immutable.Set<string>>) {
     relations.forEach(relation => {
         const idMapping = new Map<string, string>();
         relation.unknownIds.forEach(unknownId => {
             if (knownIds.has(unknownId)) {
                 const possibleMatches = knownIds.get(unknownId).intersect(relation.statedParties);
-                if (possibleMatches.size == 1) {
+                if (possibleMatches.size === 1) {
                     idMapping.set(unknownId + "@facebook.com", possibleMatches.first());
-                } else if (possibleMatches.size == 0) {
+                } else if (possibleMatches.size === 0) {
                     // TODO (group conversations?)
                     // console.log("check me 1")
                 } else {

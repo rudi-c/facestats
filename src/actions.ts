@@ -1,68 +1,68 @@
-import * as _ from 'underscore';
-import * as Immutable from 'immutable'
+import * as Immutable from "immutable";
+import * as _ from "underscore";
 
-import { State, defaultState } from "./state"
-import { WorkerActions } from "./analysis/worker-actions"
+import { WorkerActions } from "./analysis/worker-actions";
+import { defaultState, State } from "./state";
 
-export module Actions {
+export namespace Actions {
     export interface WorkerCreated {
-        type: "worker_created"
-        worker: any
+        type: "worker_created";
+        worker: any;
     }
 
     export function workerCreated(worker: any): WorkerCreated {
         return {
             type: "worker_created",
-            worker: worker,
-        }
+            worker,
+        };
     }
 
     export interface WorkerAction {
-        type: "worker_action"
-        action: WorkerActions.t
+        type: "worker_action";
+        action: WorkerActions.t;
     }
 
     export function workerAction(action: WorkerActions.t): WorkerAction {
         return {
             type: "worker_action",
-            action: action,
-        }
+            action,
+        };
     }
 
     export interface MoveToNavigator {
-        type: "move_to_navigator"
+        type: "move_to_navigator";
     }
 
     export function moveToNavigator(): MoveToNavigator {
         return {
             type: "move_to_navigator",
-        }
+        };
     }
 
     export interface UpdateProgress {
-        type: "update_progress"
-        progress: number
+        type: "update_progress";
+        progress: number;
     }
 
     export function updateProgress(progress: number): UpdateProgress {
         return {
             type: "update_progress",
-            progress: progress,
-        }
+            progress,
+        };
     }
 
     export interface ThreadClicked {
-        type: "thread_clicked"
-        threadId: number
-        additive: boolean
+        type: "thread_clicked";
+        threadId: number;
+        additive: boolean;
     }
 
     export function threadClicked(threadId: number, additive: boolean): ThreadClicked {
         return {
             type: "thread_clicked",
-            threadId: threadId,
-            additive: additive
-        }
+            threadId,
+            additive,
+        };
     }
 
     // Jane Street OCaml convention...
@@ -71,10 +71,10 @@ export module Actions {
         | WorkerAction
         | MoveToNavigator
         | UpdateProgress
-        | ThreadClicked
+        | ThreadClicked;
 }
 
-function reduceWorker(state : State, action: WorkerActions.t): State {
+function reduceWorker(state: State, action: WorkerActions.t): State {
     switch (action.type) {
         case "threads":
             return { ...state,
@@ -101,14 +101,14 @@ function reduceWorker(state : State, action: WorkerActions.t): State {
         case "got_thread_details":
             return { ...state,
                 threadDetails: state.threadDetails.set(
-                    action.threadId, action.details
-                )
+                    action.threadId, action.details,
+                ),
             };
         case "got_wordcloud":
             return { ...state,
                 wordcloudWords: state.wordcloudWords.set(
-                    action.threadId, action.words
-                )
+                    action.threadId, action.words,
+                ),
             };
         case "got_conversation_starts":
             return { ...state, conversationStarts: action.starts };
@@ -118,7 +118,7 @@ function reduceWorker(state : State, action: WorkerActions.t): State {
     }
 }
 
-export function reduce(state : State = defaultState, action: Actions.t): State {
+export function reduce(state: State = defaultState, action: Actions.t): State {
     switch (action.type) {
         case "worker_action":
             return reduceWorker(state, action.action);

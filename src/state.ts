@@ -1,30 +1,30 @@
-import * as Immutable from 'immutable'
+import * as Immutable from "immutable";
 
-import * as Data from './analysis/data'
+import * as Data from "./analysis/data";
 
-export type Views = "load_file" | "loading" | "summary" | "navigator"
+export type Views = "load_file" | "loading" | "summary" | "navigator";
 
 export class State {
-    threads: Data.ThreadInfo[]
-    parsingProgress: number
-    timeToParseInMs: number
+    public threads: Data.ThreadInfo[];
+    public parsingProgress: number;
+    public timeToParseInMs: number;
 
-    msgCountByDate: [Date, number][]
-    miscInfo: Data.MiscInfo
-    punchcard: number[][]
-    messageWordCounts: Map<string, Map<number, number>>
-    conversationLengths: Map<string, Map<number, number>>
-    conversationStarts: Map<string, [Date, number][]>
-    wordSearchCounts: Map<string, number>
-    maxMessagesInDay: number
+    public msgCountByDate: Array<[Date, number]>;
+    public miscInfo: Data.MiscInfo;
+    public punchcard: number[][];
+    public messageWordCounts: Map<string, Map<number, number>>;
+    public conversationLengths: Map<string, Map<number, number>>;
+    public conversationStarts: Map<string, Array<[Date, number]>>;
+    public wordSearchCounts: Map<string, number>;
+    public maxMessagesInDay: number;
 
-    selectedThreadIds: Immutable.Set<number>
-    threadDetails: Immutable.Map<number, Data.ThreadDetails>
-    wordcloudWords: Immutable.Map<number, string[]>
+    public selectedThreadIds: Immutable.Set<number>;
+    public threadDetails: Immutable.Map<number, Data.ThreadDetails>;
+    public wordcloudWords: Immutable.Map<number, string[]>;
 
-    worker: any
+    public worker: any;
 
-    view: Views
+    public view: Views;
 
     constructor() {
         this.threads = null;
