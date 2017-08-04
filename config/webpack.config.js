@@ -1,12 +1,16 @@
-var webpack = require('webpack');
-var path = require('path');
-var WebpackNotifierPlugin = require('webpack-notifier');
+const webpack = require('webpack');
+const path = require('path');
+const WebpackNotifierPlugin = require('webpack-notifier');
+const ExtractTextPlugin = require('extract-text-webpack-plugin');
+
+const extractSass = new ExtractTextPlugin({
+  filename: "[name].[contenthash].css",
+  disable: process.env.NODE_ENV === "development"
+});
 
 module.exports = {
   devtool: 'eval',
   entry: [
-    // Add the react hot loader entry point - in reality, you only want this in your dev Webpack config
-    'react-hot-loader/patch',
     'webpack-dev-server/client?http://localhost:3000',
     'webpack/hot/only-dev-server',
     'index.tsx'
@@ -17,20 +21,33 @@ module.exports = {
     path: path.resolve('dist')
   },
   resolve: {
-    extensions: ['', '.ts', '.tsx', '.js', '.jsx'],
-    modulesDirectories: ['src', 'node_modules'],
+    extensions: ['.ts', '.tsx', '.js', '.jsx'],
+    modules: ['src', 'node_modules'],
   },
   module: {
-    loaders: [
-      { test: /\.css$/, loader: "style-loader!css-loader" },
-      { test: /\.tsx?$/, loaders: ['babel', 'ts-loader'] },
-      { test: /\.json$/, include: /node_modules/, loader: 'json-loader' },
-      { test: /\.scss$/, loaders: ["style-loader", "css-loader", "sass-loader"] },
+    rules: [
+      { 
+        test: /\.css$/, 
+        use: extractSass.extract({
+          fallback: "style-loader",
+          use: "css-loader"
+        }) 
+      },
+      { test: /\.tsx?$/, use: ['babel-loader', 'ts-loader'] },
+      { test: /\.json$/, include: /node_modules/, use: 'json-loader' },
+      {
+        test: /\.scss$/,
+        use: extractSass.extract({
+          fallback: "style-loader",
+          use: ["css-loader", "sass-loader"]
+        }),
+      },
     ]
   },
   plugins: [
     // Add the Webpack HMR plugin so it will notify the browser when the app code changes
     new webpack.HotModuleReplacementPlugin(),
     new WebpackNotifierPlugin({ alwaysNotify: true }),
+    extractSass,
   ]
 };

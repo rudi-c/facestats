@@ -14,7 +14,7 @@ import FileInput from './file-input'
 import Navigator from './navigator'
 import Summary from './summary'
 
-const Analyzer = require("worker!../analysis/analyzer.ts")
+const Analyzer = require("worker-loader!../analysis/analyzer.ts")
 
 interface StateProps {
     view: Views

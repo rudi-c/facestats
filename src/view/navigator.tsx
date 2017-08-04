@@ -78,8 +78,7 @@ const RenderNavigator = function({ threadDetails,
                 }
                 </div>
                 {                    
-                    Array.from(wordSearchCounts.entries()).map((entry, id) => {
-                        console.log(entry);
+                    wordSearchCounts && Array.from(wordSearchCounts.entries()).map((entry, id) => {
                         return (<p key={id}>{entry[0]}: {entry[1]}</p>);
                     })
                 }

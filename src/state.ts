@@ -37,6 +37,7 @@ export class State {
         this.messageWordCounts = null;
         this.conversationLengths = null;
         this.conversationStarts = null;
+        this.wordSearchCounts = null;
         this.maxMessagesInDay = 10;
 
         this.selectedThreadIds = Immutable.Set<number>();
