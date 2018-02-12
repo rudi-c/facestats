@@ -406,7 +406,7 @@ function parseChunk(chunk, isLastChunk) {
     }
 }
 
-function onmessage(message: MessageEvent) {
+onmessage = (message: MessageEvent) => {
     const command: WorkerCommands.t = message.data;
 
     if (command.type !== "parse_chunk" && !state.threads) {

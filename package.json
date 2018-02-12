@@ -18,10 +18,10 @@
     "@types/d3-time": "^1.0.4",
     "@types/d3-time-format": "^2.0.4",
     "@types/d3-tip": "^3.5.2",
-    "@types/react": "^16.0.0",
+    "@types/react": "^16.0.36",
     "@types/react-addons-transition-group": "^15.0.1",
     "@types/react-bootstrap": "0.0.52",
-    "@types/react-dom": "^15.5.2",
+    "@types/react-dom": "^16.0.3",
     "@types/react-redux": "^4.4.33",
     "@types/underscore": "^1.7.33",
     "ava": "^0.21.0",
@@ -46,7 +46,7 @@
     "webpack": "^3.2.0",
     "webpack-dev-server": "^2.6.1",
     "webpack-notifier": "^1.4.1",
-    "worker-loader": "^0.8.1"
+    "worker-loader": "^1.1.0"
   },
   "dependencies": {
     "aphrodite": "^1.1.0",

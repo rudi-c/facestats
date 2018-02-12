@@ -1,10 +1,10 @@
 import * as React from 'react';
 import { connect } from 'react-redux';
 
-class FileInputHelper extends React.Component<any, any> {
-  static propTypes = {
-    onChange: React.PropTypes.func,
-  }
+interface FileInputHelperProps {
+  onChange: (any) => any
+}
+class FileInputHelper extends React.Component<FileInputHelperProps, {}> {
   constructor(props) {
     super(props);
 
@@ -26,7 +26,7 @@ const RenderFileInput = function({ onFileChange }): JSX.Element {
   return (
     <form>
       <label htmlFor="my-file-input">Upload a File:</label>
-      <FileInputHelper id="my-file-input" onChange={onFileChange}>
+      <FileInputHelper onChange={onFileChange}>
       </FileInputHelper>
     </form>
   );
