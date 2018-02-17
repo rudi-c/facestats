@@ -86,7 +86,7 @@ const RenderNavigator = function({ threadDetails,
         );
     }
     return (
-        <div className={"container-fluid " + css(styles.noLeftPadding)}>
+        <div className={"row " + css(styles.noLeftPadding)}>
             <div className={"col-md-2 " + css(styles.noLeftPadding)}>
                 <Threads />
             </div>
