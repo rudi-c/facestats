@@ -1,5 +1,3 @@
-import { WorkerActions } from "./worker-actions";
-
 export const fbEmailRegex = new RegExp("^([0-9]*)@facebook.com$");
 
 export function countMap<T>(values: T[]): Map<T, number> {
@@ -31,8 +29,4 @@ export function sum(values: number[]): number {
 
 export function splitOnWhitespace(str: string): string[] {
     return str.trim().split(/[ \t\n\r]+/);
-}
-
-export function sendUpdate(message: WorkerActions.t) {
-    (postMessage as any)(message);
 }

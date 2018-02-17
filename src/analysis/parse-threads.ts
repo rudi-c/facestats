@@ -4,8 +4,7 @@ import * as _ from "underscore";
 
 const htmlparser2 = require("../../lib/htmlparser2");
 
-import { WorkerActions } from "../analysis/worker-actions";
-import { sendUpdate } from "./helpers";
+import { WorkerActions, sendUpdate } from "../analysis/worker-actions";
 
 type TextNode = parse5.AST.Default.TextNode;
 type ASTElement = parse5.AST.Default.Element;

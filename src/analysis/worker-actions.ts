@@ -89,3 +89,7 @@ export namespace WorkerActions {
         | GotConversationStarts
         | GotWordsFrequency;
 }
+
+export function sendUpdate(message: WorkerActions.t) {
+    (postMessage as any)(message);
+}

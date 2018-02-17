@@ -1,11 +1,11 @@
 import * as _ from "underscore";
 
 import * as Data from "./data";
-import { WorkerActions } from "./worker-actions";
+import { WorkerActions, sendUpdate } from "./worker-actions";
 import { WorkerCommands } from "./worker-commands";
 
 import { cleanup } from "./cleanup";
-import { countMap, sendUpdate, splitOnWhitespace, sum } from "./helpers";
+import { countMap, splitOnWhitespace, sum } from "./helpers";
 
 import { Message, MessageThread, ThreadParser } from "./parse-threads";
 
