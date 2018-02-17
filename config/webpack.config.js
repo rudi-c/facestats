@@ -3,11 +3,6 @@ const path = require('path');
 const WebpackNotifierPlugin = require('webpack-notifier');
 const ExtractTextPlugin = require('extract-text-webpack-plugin');
 
-const extractSass = new ExtractTextPlugin({
-  filename: "[name].[contenthash].css",
-  disable: process.env.NODE_ENV === "development"
-});
-
 module.exports = {
   devtool: 'eval',
   entry: [
@@ -28,7 +23,7 @@ module.exports = {
     rules: [
       { 
         test: /\.css$/, 
-        use: extractSass.extract({
+        use: ExtractTextPlugin.extract({
           fallback: "style-loader",
           use: "css-loader"
         }) 
@@ -37,7 +32,7 @@ module.exports = {
       { test: /\.json$/, include: /node_modules/, use: 'json-loader' },
       {
         test: /\.scss$/,
-        use: extractSass.extract({
+        use: ExtractTextPlugin.extract({
           fallback: "style-loader",
           use: ["css-loader", "sass-loader"]
         }),
@@ -48,6 +43,9 @@ module.exports = {
     // Add the Webpack HMR plugin so it will notify the browser when the app code changes
     new webpack.HotModuleReplacementPlugin(),
     new WebpackNotifierPlugin({ alwaysNotify: true }),
-    extractSass,
+    new ExtractTextPlugin({
+      filename: "[name].[contenthash].css",
+      disable: process.env.NODE_ENV === "development"
+    })
   ]
 };
