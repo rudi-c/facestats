@@ -5,7 +5,7 @@ import { WorkerActions, sendUpdate } from "./worker-actions";
 import { WorkerCommands } from "./worker-commands";
 
 import { cleanup } from "./cleanup";
-import { countMap, splitOnWhitespace, sum } from "./helpers";
+import { countMap, splitOnWhitespace, sum } from "./helpers.js";
 
 import { Message, MessageThread, ThreadParser } from "./parse-threads";
 

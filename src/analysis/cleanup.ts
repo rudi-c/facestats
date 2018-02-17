@@ -1,7 +1,7 @@
 import * as Immutable from "immutable";
 import * as _ from "underscore";
 
-import { fbEmailRegex } from "./helpers";
+import { fbEmailRegex } from "./helpers.js";
 import { Message, MessageThread } from "./parse-threads";
 
 class Relation {
