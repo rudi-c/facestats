@@ -16,7 +16,7 @@ module.exports = {
     path: path.resolve('dist')
   },
   resolve: {
-    extensions: ['.ts', '.tsx', '.js', '.jsx'],
+    extensions: ['.ts', '.tsx', '.js', '.jsx', '.re', '.ml'],
     modules: ['src', 'node_modules'],
   },
   module: {
@@ -28,6 +28,15 @@ module.exports = {
           use: "css-loader"
         }) 
       },
+      { test: /\.(re|ml)$/, use: [
+        'babel-loader', {
+          loader: 'bs-loader',
+          options: {
+            module: 'es6',
+            inSource: true
+          }
+        }
+      ]},
       { test: /\.tsx?$/, use: ['babel-loader', 'ts-loader'] },
       { test: /\.json$/, include: /node_modules/, use: 'json-loader' },
       {

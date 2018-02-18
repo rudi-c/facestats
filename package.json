@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "build": "webpack --config config/webpack.config.js",
+    "build": "bsb -make-world && webpack --config config/webpack.config.js",
     "lint": "tslint -c tslint.json 'src/**/*.ts' || true",
     "postinstall": "npm rebuild node-sass",
     "test": "echo \"Error: no test specified\" && exit 1"
@@ -30,6 +30,8 @@
     "babel-preset-es2015": "^6.18.0",
     "babel-preset-react": "^6.16.0",
     "babel-preset-stage-0": "^6.16.0",
+    "bs-loader": "^2.0.1",
+    "bs-platform": "~2.2.1",
     "css-loader": "^0.28.4",
     "d3-time-format": "^2.0.2",
     "extract-text-webpack-plugin": "^3.0.0",

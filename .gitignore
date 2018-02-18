@@ -3,3 +3,9 @@ ts-build
 dist
 npm-debug.log
 utils/*.htm*
+
+# Reason/Bucklescript stuff
+src/**/*.js
+lib/bs/
+lib/js/
+.merlin

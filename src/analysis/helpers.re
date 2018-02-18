@@ -1,4 +1,4 @@
-"use strict";
+[%%bs.raw {|
 exports.__esModule = true;
 exports.fbEmailRegex = new RegExp("^([0-9]*)@facebook.com$");
 function countMap(values) {
@@ -31,3 +31,4 @@ function splitOnWhitespace(str) {
     return str.trim().split(/[ \t\n\r]+/);
 }
 exports.splitOnWhitespace = splitOnWhitespace;
+|}];

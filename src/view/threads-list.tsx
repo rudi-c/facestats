@@ -9,7 +9,7 @@ import { ThreadInfo } from '../analysis/data'
 
 import { Actions } from '../actions'
 import { WorkerCommands } from '../analysis/worker-commands'
-import { fbEmailRegex } from '../analysis/helpers.js'
+import { fbEmailRegex } from '../analysis/helpers'
 
 interface StateProps {
     threads: ThreadInfo[]

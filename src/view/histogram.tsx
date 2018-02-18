@@ -6,7 +6,7 @@ import { connect } from 'react-redux';
 
 import * as d3 from "d3";
 
-import { mapMap } from '../analysis/helpers.js'
+import { mapMap } from '../analysis/helpers'
 
 import { State } from '../state'
 import D3Harness from './d3-harness'
