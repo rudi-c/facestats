@@ -4,7 +4,7 @@ const WebpackNotifierPlugin = require('webpack-notifier');
 const ExtractTextPlugin = require('extract-text-webpack-plugin');
 
 module.exports = {
-  devtool: 'eval',
+  devtool: 'source-map',
   entry: [
     'webpack-dev-server/client?http://localhost:3000',
     'webpack/hot/only-dev-server',
@@ -28,15 +28,7 @@ module.exports = {
           use: "css-loader"
         }) 
       },
-      { test: /\.(re|ml)$/, use: [
-        'babel-loader', {
-          loader: 'bs-loader',
-          options: {
-            module: 'es6',
-            inSource: true
-          }
-        }
-      ]},
+      { test: /\.jsx?$/, use: 'babel-loader' },
       { test: /\.tsx?$/, use: ['babel-loader', 'ts-loader'] },
       { test: /\.json$/, include: /node_modules/, use: 'json-loader' },
       {
