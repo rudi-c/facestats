@@ -28,7 +28,15 @@ module.exports = {
           use: "css-loader"
         }) 
       },
-      { test: /\.jsx?$/, use: 'babel-loader' },
+      { test: /\.(re|ml)$/, use: [
+        'babel-loader', {
+          loader: 'bs-loader',
+          options: {
+            module: 'es6',
+            inSource: true
+          }
+        }
+      ]},
       { test: /\.tsx?$/, use: ['babel-loader', 'ts-loader'] },
       { test: /\.json$/, include: /node_modules/, use: 'json-loader' },
       {
