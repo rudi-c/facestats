@@ -9,5 +9,6 @@
   "package-specs": {
     "module": "es6-global",
     "in-source": true
-  }
+  },
+  "refmt": 3
 }

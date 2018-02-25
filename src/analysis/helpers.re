@@ -1,4 +1,4 @@
-let fbEmailRegex = [%bs.raw {| new RegExp("^([0-9]*)@facebook.com$") |}];
+let fbEmailRegex = [%bs.re "/^([0-9]*)@facebook.com$/"];
 
 let countMap = [%bs.raw {| (values) => {
     var counts = new Map();
@@ -22,10 +22,9 @@ let mapMap = [%bs.raw {| (map, f) => {
     return newMap;
 } |}];
 
-let sum = [%bs.raw {| (values) => {
-    return values.reduce(function (a, b) { return a + b; });
-} |}];
+let sum = (array) => Js.Array.reduce((x, y) => x + y, 0, array);
 
-let splitOnWhitespace = [%bs.raw {| (str) => {
-    return str.trim().split(/[ \t\n\r]+/);
-} |}];
+let splitOnWhitespace = (str) =>
+  str
+  |> String.trim
+  |> Js.String.splitByRe([%bs.re "/[ \\t\\n\\r]+/"]);
