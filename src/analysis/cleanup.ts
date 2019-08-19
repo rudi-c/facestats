@@ -2,7 +2,7 @@ import * as Immutable from "immutable";
 import * as _ from "underscore";
 
 import { fbEmailRegex } from "./helpers";
-import { Message, MessageThread } from "./parse-threads";
+import { Message, MessageThread } from "./ParseThreads";
 
 class Relation {
     // Prefer using Immutable.Set as it comes with useful built-in helper functions.

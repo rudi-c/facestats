@@ -7,7 +7,7 @@ import { WorkerCommands } from "./worker-commands";
 import { cleanup } from "./cleanup";
 import { countMap, splitOnWhitespace, sum } from "./helpers";
 
-import { Message, MessageThread, ThreadParser } from "./parse-threads";
+import { Message, MessageThread, ThreadParser } from "./ParseThreads";
 
 interface WorkerState {
     threads: Map<number, MessageThread>;
